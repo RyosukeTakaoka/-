@@ -64,6 +64,12 @@ public struct ResultView: Equatable, Sendable {
     public var summary: ResultSummary // personal は nil にしてある
     public var you: String
     public var own: PersonalSummary?
+
+    public init(summary: ResultSummary, you: String, own: PersonalSummary?) {
+        self.summary = summary
+        self.you = you
+        self.own = own
+    }
 }
 
 public enum ResultSummaries {

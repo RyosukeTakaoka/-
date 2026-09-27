@@ -339,12 +339,12 @@ final class FirebaseGameService: GameService {
         }
         for name in wanted where channelHandles[name] == nil {
             let ref = db.reference(withPath: "rooms/\(roomId)/channels/\(name)")
-            let handle = ref.observe(.value, with: { snap in
+            let handle = ref.observe(.value, with: { [weak self] snap in
                 let value = snap.value
-                Task { @MainActor [weak self] in self?.setChannel(name, value as? String) }
-            }, withCancel: { _ in
+                Task { @MainActor in self?.setChannel(name, value as? String) }
+            }, withCancel: { [weak self] _ in
                 // 読む権限がなくなった（役割が変わった直後など）。次の public の更新で付け替える
-                Task { @MainActor [weak self] in
+                Task { @MainActor in
                     self?.channelHandles[name] = nil
                     self?.setChannel(name, nil)
                 }
@@ -411,7 +411,7 @@ final class FirebaseGameService: GameService {
         entry.0.removeObserver(withHandle: entry.1)
         presenceHandle = nil
         let myRef = db.reference(withPath: "rooms/\(roomId)/presence/\(uid)")
-        myRef.cancelDisconnectOperations()
+        _ = try? await myRef.cancelDisconnectOperations()
         _ = try? await myRef.setValue(["online": false, "lastChanged": ServerValue.timestamp()])
     }
 }

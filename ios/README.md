@@ -27,7 +27,8 @@ iPhone（SwiftUI アプリ）                         Firebase
 | --- | --- |
 | `ios/OniGame/` | アプリ本体（SwiftUI の画面・地図・GPS・Firebase との通信） |
 | `ios/OniGameCore/` | ゲームのルール（Swift パッケージ）。画面にも Firebase にも依存しないので、Mac でも Linux でもテストできる |
-| `ios/project.yml` | Xcode プロジェクトの設計図（XcodeGen で `.xcodeproj` を作る） |
+| `ios/OniGame.xcodeproj` | Xcode プロジェクト（`git pull` するだけで最新になる） |
+| `ios/project.yml` | Xcode プロジェクトの設計図（`.xcodeproj` はここから XcodeGen で作ってある） |
 | `functions/` | サーバー（Cloud Functions）。ルールは `oni-game/js/game` を共有して使う |
 | `database.rules.json` | Security Rules（誰が何を読み書きできるか） |
 
@@ -72,22 +73,22 @@ Swift 版で同じ操作をして、状態・ログ・結果・チャンネル�
 ## 必要なもの
 
 - Mac と **Xcode 16 以上**（iOS 17 以上の iPhone またはシミュレーター）
-- [XcodeGen](https://github.com/yonaskolb/XcodeGen)（`brew install xcodegen`）
 - サーバーを手元で動かすとき: Node.js 22、Java 11 以上（Firebase Emulator 用）
 
 ## 動かし方
 
-### 1. Xcode プロジェクトを作る
+### 1. 最新にして Xcode で開く
 
 ```bash
-cd ios
-xcodegen generate        # OniGame.xcodeproj ができる
-open OniGame.xcodeproj
+git pull                 # 最新のコードとプロジェクトを受け取る（XcodeGen は不要）
+open ios/OniGame.xcodeproj
 ```
+
+`git pull` したとき Xcode を開いたままなら、Xcode が自動で読み込み直します。
 
 初回は Xcode が Firebase のライブラリ（Swift Package）をダウンロードします（数分かかります）。
 実機で動かすときは、Xcode の「Signing & Capabilities」で自分のチーム（Apple ID）を選び、
-`project.yml` の `PRODUCT_BUNDLE_IDENTIFIER` を自分のもの（例: `com.あなたの名前.onigame`）に変えてください。
+Bundle Identifier を自分のもの（例: `com.あなたの名前.onigame`）に変えてください。
 
 ### 2-A. 1台で試す（端末内モード・開発用）
 
@@ -110,7 +111,7 @@ npm run emulators        # Auth・RTDB・Functions・Tasks のエミュレータ
 - **シミュレーター**: そのまま Xcode で実行します（`OniEmulatorHost` が `127.0.0.1`）
 - **実機**: iPhone と Mac を同じ Wi-Fi につなぎ、
   1. `firebase.json` の各エミュレーターの `"host"` を `"0.0.0.0"` にする（ほかの機器から接続できるようにする）
-  2. `project.yml` の `OniEmulatorHost` を Mac の IP アドレス（「システム設定 → Wi-Fi → 詳細」で確認）にして `xcodegen generate`
+  2. `ios/OniGame/Info.plist` の `OniEmulatorHost` を Mac の IP アドレス（「システム設定 → Wi-Fi → 詳細」で確認）にする
 - 2台（シミュレーター＋実機、または2つのシミュレーター）で起動すると、別々の匿名ユーザーとして同じ部屋で遊べます
 - 1人ではゲームを開始できません（鬼1人＋逃走者1人以上が必要）
 
@@ -127,7 +128,7 @@ npm run emulators        # Auth・RTDB・Functions・Tasks のエミュレータ
    ```
 5. コンソールで iOS アプリを追加し（バンドル ID は `project.yml` と同じ）、`GoogleService-Info.plist` をダウンロードして
    `ios/OniGame/` に置く（**.gitignore 済み。GitHub に上げない**）
-6. `project.yml` の `OniFirebaseMode` を `production` にして `xcodegen generate`
+6. `ios/OniGame/Info.plist` の `OniFirebaseMode` を `production` にする
 
 > 🔐 `GoogleService-Info.plist` の API キーは「秘密の鍵」ではありませんが、守りの前提にはしません。
 > 誰が何を読めるかは **Security Rules と Cloud Functions** で決めています（下の表）。

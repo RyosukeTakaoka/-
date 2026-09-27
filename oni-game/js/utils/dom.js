@@ -17,17 +17,34 @@ export function el(tag, { className, text, attrs } = {}, children = []) {
   return node;
 }
 
-let toastTimer = null;
+// 通知は順番に表示する（同時に複数届いても上書きで消えないように）
+const toastQueue = [];
+let toastShowing = null;
+
 export function toast(message, ms = 2500) {
+  if (toastShowing === message || toastQueue.some((t) => t.message === message)) return;
+  toastQueue.push({ message, ms });
+  if (toastQueue.length > 4) toastQueue.shift(); // 溜まりすぎたら古いものを捨てる
+  if (!toastShowing) showNextToast();
+}
+
+function showNextToast() {
+  const next = toastQueue.shift();
   let node = document.getElementById('toast');
+  if (!next) {
+    toastShowing = null;
+    node?.classList.remove('show');
+    return;
+  }
   if (!node) {
     node = el('div', { className: 'toast', attrs: { id: 'toast', role: 'status' } });
     document.body.append(node);
   }
-  node.textContent = message;
+  toastShowing = next.message;
+  node.textContent = next.message;
   node.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => node.classList.remove('show'), ms);
+  // 後ろに待っている通知があるときは少し短めに切り替える
+  setTimeout(showNextToast, toastQueue.length > 0 ? Math.min(next.ms, 2000) : next.ms);
 }
 
 /** 保存できない環境（プライベートモード等）でも落ちない localStorage */

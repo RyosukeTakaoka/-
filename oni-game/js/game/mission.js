@@ -5,15 +5,17 @@
 //   nextIndex: 次に発生するミッションの番号（0始まり）
 //   active: null | {
 //     id, index, startedAt, endsAt, arrivalRadiusM,
-//     participants: { [runnerId]: { destination, result, rerolled, resolvedAt, reason } }
+//     participants: { [runnerId]: { destination, result, resolvedAt, reason } }
 //   }
 //   history: [{ id, index, startedAt, endedAt, results: { [runnerId]: result } }] … 座標は残さない
+//   rerollsUsed: { [runnerId]: true } … 目的地の変更を使った人（1ゲーム1回。鬼には渡さない）
 //
 // ここにある関数はすべて純粋関数（入力の state を変更せず、新しい値を返す）。
 // 実位置と目的地を使うので、Firebase 導入後はサーバー側で実行する。
 
 import { distanceM } from '../utils/distance.js';
-import { activeRunners, withMissionResult, MISSION_RESULT } from './player.js';
+import { activeRunners, withMissionResult, MISSION_RESULT, ROLE, STATUS } from './player.js';
+import { blurAfterMission } from './blurPolicy.js';
 import { chooseDestination, ARRIVAL_RADIUS_M } from './destinations.js';
 
 export const MISSION_STATUS = Object.freeze({
@@ -27,7 +29,7 @@ const LATE_START_MIN_MS = 20_000; // 発生が遅れて、残りがこれ未満�
 const END_MARGIN_MS = 10_000; // ゲーム終了のこの時間前までにミッションを終える
 
 export function emptyMissionState() {
-  return { schedule: [], nextIndex: 0, active: null, history: [] };
+  return { schedule: [], nextIndex: 0, active: null, history: [], rerollsUsed: {} };
 }
 
 /** ゲーム開始時: スケジュール（開始からの時間）を実時刻にする */
@@ -39,11 +41,18 @@ export function createMissionState(schedule, startedAt) {
 }
 
 /**
- * ミッション結果をプレイヤーに反映する。
- * STEP 5: ここで結果に応じて blurM を変更する処理を追加する（成功 → 大きく / 失敗 → 小さく）。
+ * ミッション結果をプレイヤーに反映する（ミッション終了時に呼ぶ）。
+ * - 結果を missionHistory に記録
+ * - 参加中の逃走者なら blurPolicy で blurM を変える（成功 → 1段階大きく / 失敗 → 1段階小さく）
+ *   確保されて脱落・鬼になった人は blurM を変えない
+ * - ここで変えるのは player.blurM だけ。公開済みの可能性エリアは変えないので、
+ *   鬼に見える円は「次の位置公開」から新しい大きさになる（locationPublisher.js）
  */
 export function applyMissionOutcome(player, { missionId, result, at }) {
-  return withMissionResult(player, { missionId, result, at });
+  const recorded = withMissionResult(player, { missionId, result, at });
+  const isActiveRunner = player.role === ROLE.RUNNER && player.status === STATUS.ACTIVE;
+  if (!isActiveRunner) return recorded;
+  return { ...recorded, blurM: blurAfterMission(player.blurM, result) };
 }
 
 function destinationFor(game, runnerId, limitMs, rng) {
@@ -71,8 +80,8 @@ function startMission(game, missions, planned, now, rng) {
   for (const runner of activeRunners(game.players)) {
     const destination = destinationFor(game, runner.id, endsAt - now, rng);
     participants[runner.id] = destination
-      ? { destination, result: MISSION_STATUS.PENDING, rerolled: false, resolvedAt: null, reason: null }
-      : { destination: null, result: MISSION_STATUS.CANCELLED, rerolled: false, resolvedAt: now, reason: 'no_destination' };
+      ? { destination, result: MISSION_STATUS.PENDING, resolvedAt: null, reason: null }
+      : { destination: null, result: MISSION_STATUS.CANCELLED, resolvedAt: now, reason: 'no_destination' };
   }
   const active = { id, index: planned.index, startedAt: now, endsAt, arrivalRadiusM: ARRIVAL_RADIUS_M, participants };
   return { missions: { ...missions, nextIndex: missions.nextIndex + 1, active }, started: active };
@@ -130,12 +139,22 @@ export function cancelMissions(missions, now) {
   return { ...base, nextIndex: base.schedule.length };
 }
 
-/** 目的地が行けない場所だったとき、1回だけ作り直す */
+/** 目的地の変更をまだ使えるか（1ゲーム1回） */
+export function canRerollDestination(missions, runnerId) {
+  const p = missions?.active?.participants[runnerId];
+  return Boolean(p && p.result === MISSION_STATUS.PENDING && !missions.rerollsUsed?.[runnerId]);
+}
+
+/**
+ * 目的地が行けない・危ない場所だったとき、作り直す（1ゲームにつき1回）。
+ * 変更後の目的地も chooseDestination の同じルールを通す。
+ * 変更した事実・時刻はログにもビューにも出さない（本人のビューの目的地が変わるだけ）。
+ */
 export function rerollDestination(game, runnerId, now, rng = Math.random) {
   const missions = game.missions;
   const p = missions.active?.participants[runnerId];
   if (!p || p.result !== MISSION_STATUS.PENDING) return { ok: false, reason: 'not_in_mission' };
-  if (p.rerolled) return { ok: false, reason: 'already_rerolled' };
+  if (missions.rerollsUsed?.[runnerId]) return { ok: false, reason: 'already_rerolled' };
   const destination = destinationFor(game, runnerId, missions.active.endsAt - now, rng)
     ?? destinationFor(game, runnerId, missions.active.endsAt - missions.active.startedAt, rng);
   if (!destination) return { ok: false, reason: 'no_destination' };
@@ -143,9 +162,10 @@ export function rerollDestination(game, runnerId, now, rng = Math.random) {
     ok: true,
     missions: {
       ...missions,
+      rerollsUsed: { ...missions.rerollsUsed, [runnerId]: true },
       active: {
         ...missions.active,
-        participants: { ...missions.active.participants, [runnerId]: { ...p, destination, rerolled: true } },
+        participants: { ...missions.active.participants, [runnerId]: { ...p, destination } },
       },
     },
   };

@@ -36,6 +36,7 @@ export const gameScreen = (() => {
   let layer = null;
   let missionLayer = null;
   let lastOwnResult = null; // 自分のミッション結果の変化を知らせるため
+  let lastOwn = null; // { viewerId, historyLength, blurM } 自分のぼかし精度の変化を知らせるため
   let viewerId = null;
   let lastLogId = 0;
   let devPanel = null;
@@ -86,6 +87,28 @@ export const gameScreen = (() => {
     lastOwnResult = key;
   }
 
+  /** ミッション終了で自分の blurM が変わったことを本人にだけ知らせる（鬼には通知しない） */
+  function notifyOwnBlurChange(v) {
+    const self = v.self;
+    const now = self ? { viewerId, historyLength: self.missionHistory.length, blurM: self.blurM } : null;
+    const prev = lastOwn;
+    lastOwn = now;
+    if (!now || !prev || prev.viewerId !== viewerId || now.historyLength <= prev.historyLength) return;
+    if (self.role !== 'runner' || self.status !== 'active') return;
+    const result = self.missionHistory.at(-1)?.result;
+    const change = `${prev.blurM}m → ${now.blurM}m・次の位置公開から反映`;
+    if (result === 'success') {
+      toast(now.blurM > prev.blurM
+        ? `✅ ミッション成功！ 位置情報のぼかしが強くなりました（${change}）`
+        : '✅ ミッション成功！ ぼかしはすでに最大です', 4500);
+    } else if (result === 'failure') {
+      toast(now.blurM < prev.blurM
+        ? `❌ ミッション失敗… 位置情報のぼかしが弱くなりました（${change}）`
+        : '❌ ミッション失敗… ぼかしはすでに最小です', 4500);
+      navigator.vibrate?.([300, 100, 300]);
+    }
+  }
+
   function render() {
     const v = view();
     renderHud(root, v);
@@ -94,6 +117,7 @@ export const gameScreen = (() => {
     layer?.update(v);
     missionLayer?.update(v);
     notifyNewLogs(v);
+    notifyOwnBlurChange(v); // ログの通知より後（本人向けの通知を優先して表示する）
     devPanel?.update(gameStore.getState().players, viewerId);
     root.querySelector('#game-end').hidden = !(v.phase === PHASE.PLAYING && v.self?.isHost);
     if (v.phase === PHASE.FINISHED) stopLocationSharing();
@@ -141,7 +165,7 @@ export const gameScreen = (() => {
         else navigator.vibrate?.([100, 50, 100]);
       });
       root.querySelector('#mission-reroll').addEventListener('click', () => {
-        if (!confirm('目的地を変更しますか？（1回だけ）')) return;
+        if (!confirm('目的地を変更しますか？（1ゲームにつき1回だけ使えます）')) return;
         const result = requestNewDestination(viewerId);
         toast(result.ok ? '目的地を変更しました' : '目的地を変更できませんでした');
       });
@@ -196,6 +220,7 @@ export const gameScreen = (() => {
       layer = null;
       missionLayer = null;
       lastOwnResult = null;
+      lastOwn = null;
       devPanel = null;
       root = null;
     },

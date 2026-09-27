@@ -9,7 +9,7 @@ export const MISSION_PANEL_TEMPLATE = `
   <p id="mission-title" class="mission-title"></p>
   <p id="mission-detail" class="mission-detail"></p>
   <p id="mission-safety" class="mission-safety" hidden>⚠ 道路・水辺・私有地など危ない場所や入れない場所なら、向かわずに目的地を変更してください</p>
-  <button id="mission-reroll" class="btn btn-small" type="button" hidden>この目的地には行けない（1回だけ変更）</button>
+  <button id="mission-reroll" class="btn btn-small" type="button" hidden>この目的地には行けない（1ゲームに1回だけ変更）</button>
 </section>`;
 
 const RESULT_TEXT = {

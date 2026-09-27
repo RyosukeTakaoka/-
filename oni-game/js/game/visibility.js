@@ -23,7 +23,7 @@ import { ROLE, STATUS, activeRunners, originalRunners } from './player.js';
 import { CAPTURE_COOLDOWN_MS } from './capture.js';
 import { nextRevealAt } from './locationPublisher.js';
 import { MISSION_COUNT } from './missionSchedule.js';
-import { MISSION_STATUS, summarizeResults } from './mission.js';
+import { MISSION_STATUS, summarizeResults, canRerollDestination } from './mission.js';
 
 export const DISPLAY = Object.freeze({
   EXACT: 'exact', // 正確な位置
@@ -112,7 +112,7 @@ function ownMissionInfo(missions, viewerId) {
     destination: p.destination && p.result === MISSION_STATUS.PENDING
       ? { lat: p.destination.lat, lng: p.destination.lng, label: p.destination.label, kind: p.destination.kind }
       : null,
-    canReroll: p.result === MISSION_STATUS.PENDING && !p.rerolled,
+    canReroll: canRerollDestination(missions, viewerId),
   };
 }
 

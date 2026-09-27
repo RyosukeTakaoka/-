@@ -65,7 +65,12 @@ export function renderHud(root, view) {
     status.textContent = '確保されました。観戦中です（逃走者の位置は表示されません）';
   } else if (playing && self?.role === ROLE.RUNNER && self.status === STATUS.ACTIVE && self.blurM) {
     status.hidden = false;
-    status.textContent = `鬼にはあなたの位置が半径${self.blurM}mの円（青い円）で見えています`;
+    const shown = self.possibleArea?.radiusM;
+    status.textContent = !shown
+      ? `次の位置公開で、鬼にはあなたの位置が半径${self.blurM}mの円で見えます`
+      : shown === self.blurM
+        ? `鬼にはあなたの位置が半径${shown}mの円（青い円）で見えています`
+        : `鬼には半径${shown}mの円で見えています（次の位置公開から半径${self.blurM}m）`;
   } else if (playing && self?.originalRole === ROLE.RUNNER && self.role === ROLE.HUNTER) {
     status.hidden = false;
     status.textContent = '確保されて鬼になりました。逃走者を捕まえよう！';

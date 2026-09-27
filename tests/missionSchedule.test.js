@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createSeededRng } from '../oni-game/js/utils/random.js';
 import { generateMissionSchedule, missionTiming, MISSION_COUNT, MIN_LIMIT_MS } from '../oni-game/js/game/missionSchedule.js';
-import { DURATION_OPTIONS_MIN } from '../oni-game/js/game/settings.js';
+import { DURATION_OPTIONS_MIN, DEFAULT_SETTINGS, sanitizeSettings } from '../oni-game/js/game/settings.js';
 
 const MIN = 60_000;
 
@@ -20,20 +20,32 @@ function checkSchedule(durationMs, schedule) {
   for (const m of schedule) assert.ok(m.limitMs >= MIN_LIMIT_MS);
 }
 
-test('どのゲーム時間でも必ず4回・最低間隔あり・ゲーム時間内（乱数を変えて500回）', () => {
+test('【正式】5〜60分の全設定で必ず4回・最低間隔あり・ゲーム時間内（乱数を変えて500回）', () => {
   for (const minutes of DURATION_OPTIONS_MIN) {
     const rng = createSeededRng(minutes);
     for (let i = 0; i < 500; i++) checkSchedule(minutes * MIN, generateMissionSchedule(minutes * MIN, rng));
   }
 });
 
-test('短いゲーム（5分）でも4回成立する', () => {
-  const t = missionTiming(5 * MIN);
-  assert.ok(t.limitMs >= MIN_LIMIT_MS);
-  assert.ok(t.slackMs >= 0);
-  checkSchedule(5 * MIN, generateMissionSchedule(5 * MIN, createSeededRng(1)));
-  // 選択肢にない中途半端な長さでも成立する
-  for (const ms of [3 * MIN, 4 * MIN, 7 * MIN, 13 * MIN]) checkSchedule(ms, generateMissionSchedule(ms, createSeededRng(2)));
+test('正式なゲーム時間の選択肢は5〜60分（3分などはUIに出さない）', () => {
+  assert.deepEqual(DURATION_OPTIONS_MIN, [5, 10, 20, 30, 60]);
+  assert.equal(sanitizeSettings({ durationMin: 3 }).durationMin, DEFAULT_SETTINGS.durationMin, '3分は設定できない');
+});
+
+test('【正式】5〜60分の全設定で4ミッションが成立する（最短の5分を含む）', () => {
+  for (const minutes of DURATION_OPTIONS_MIN) {
+    const t = missionTiming(minutes * MIN);
+    assert.ok(t.limitMs >= 45_000, `${minutes}分の制限時間が短すぎる`);
+    assert.ok(t.slackMs >= 0);
+    checkSchedule(minutes * MIN, generateMissionSchedule(minutes * MIN, createSeededRng(minutes)));
+  }
+});
+
+test('【内部テスト】UIにない長さ（3〜60分の各分）でもスケジュールが壊れない', () => {
+  const rng = createSeededRng(2);
+  for (let minutes = 3; minutes <= 60; minutes++) {
+    for (let i = 0; i < 20; i++) checkSchedule(minutes * MIN, generateMissionSchedule(minutes * MIN, rng));
+  }
 });
 
 test('4回入らないほど短いゲームはエラーにする（黙って4回未満にしない）', () => {

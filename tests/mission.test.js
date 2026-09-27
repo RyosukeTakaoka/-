@@ -8,6 +8,7 @@ import {
 } from '../oni-game/js/game/gameState.js';
 import { MISSION_STATUS } from '../oni-game/js/game/mission.js';
 import { ROLE } from '../oni-game/js/game/player.js';
+import { isInsideArea } from '../oni-game/js/game/gameArea.js';
 import { CENTER, startStoreGame } from './helpers.js';
 
 setMissionRandom(createSeededRng(21));
@@ -171,13 +172,42 @@ test('時間切れでゲームが終わるときもミッションは発生済�
   assert.equal(gameStore.getState().missions.active, null);
 });
 
-test('行けない目的地は1回だけ変更できる', () => {
-  const { runners, hunter, first } = setup();
-  tickGame(first.startsAt);
+test('目的地の変更は1ゲームにつき1回だけで、変更後も同じ安全ルールを通る', () => {
+  const zone = { center: at(80, 45), radiusM: 30 };
+  gameStore.setState({ exclusionZones: [] });
+  const { runners, hunter } = setup();
+  gameStore.setState({ exclusionZones: [zone] });
+  const { schedule } = gameStore.getState().missions;
+  tickGame(schedule[0].startsAt);
   const [a] = runners;
   const before = participant(a).destination;
-  assert.equal(requestNewDestination(a, first.startsAt + 1000).ok, true);
-  assert.ok(distanceM(before, participant(a).destination) > 0.01);
-  assert.equal(requestNewDestination(a, first.startsAt + 2000).reason, 'already_rerolled');
-  assert.equal(requestNewDestination(hunter, first.startsAt + 2000).ok, false, '鬼は変更できない');
+  assert.equal(getPlayerView(a, schedule[0].startsAt).self.mission.canReroll, true);
+  assert.equal(requestNewDestination(a, schedule[0].startsAt + 1000).ok, true);
+  const after = participant(a).destination;
+  assert.ok(distanceM(before, after) > 0.01);
+  assert.ok(distanceM(after, zone.center) > zone.radiusM + 20, '変更後も除外エリアを避ける');
+  assert.ok(isInsideArea(gameStore.getState().area, after, 30 - 0.01), '変更後もエリア内');
+  assert.equal(requestNewDestination(a, schedule[0].startsAt + 2000).reason, 'already_rerolled');
+  assert.equal(requestNewDestination(hunter, schedule[0].startsAt + 2000).ok, false, '鬼は変更できない');
+
+  // 次のミッションでも使えない（1ゲーム1回）
+  tickGame(schedule[0].startsAt + schedule[0].limitMs);
+  tickGame(schedule[1].startsAt);
+  assert.equal(getPlayerView(a, schedule[1].startsAt).self.mission.canReroll, false);
+  assert.equal(requestNewDestination(a, schedule[1].startsAt + 1000).reason, 'already_rerolled');
+  // もう1人の逃走者はまだ使える
+  assert.equal(getPlayerView(runners[1], schedule[1].startsAt).self.mission.canReroll, true);
+});
+
+test('目的地を変更しても、鬼・他の逃走者のビューは変わらない（事実も時刻も漏れない）', () => {
+  const { runners, hunter, first } = setup();
+  tickGame(first.startsAt);
+  const [a, b] = runners;
+  const t = first.startsAt + 5000;
+  const before = { hunter: JSON.stringify(getPlayerView(hunter, t)), other: JSON.stringify(getPlayerView(b, t)) };
+  const logBefore = gameStore.getState().log.length;
+  assert.equal(requestNewDestination(a, t).ok, true);
+  assert.equal(JSON.stringify(getPlayerView(hunter, t)), before.hunter, '鬼のビューが変わった');
+  assert.equal(JSON.stringify(getPlayerView(b, t)), before.other, '他の逃走者のビューが変わった');
+  assert.equal(gameStore.getState().log.length, logBefore, 'ログに残った');
 });

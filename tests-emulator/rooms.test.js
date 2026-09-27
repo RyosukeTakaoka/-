@@ -36,7 +36,7 @@ test('匿名ユーザーが部屋を作れる: 内部ID と 4桁コードは別�
   assert.deepEqual(Object.keys(members), ['alice']);
   assert.equal(members.alice.name, 'アリス');
   assert.deepEqual(Object.keys(members.alice).sort(), ['joinedAt', 'name'], '役割やホストのフラグは保存しない');
-  const settings = await read(`rooms/${r.roomId}/public/settings`);
+  const settings = JSON.parse(await read(`rooms/${r.roomId}/public/doc`)).settings;
   assert.equal(settings.durationMin, 20);
   assert.equal(settings.hunterCount, 10, '範囲外は丸める');
   assert.equal(settings.evil, undefined, '知らない項目は保存しない');

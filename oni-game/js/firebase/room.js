@@ -69,7 +69,8 @@ export function createFirebaseRoomService({ sdk, db, uid, call }) {
     });
     watch(`rooms/${roomId}/members`, (v) => { members = v ?? {}; });
     watch(`rooms/${roomId}/presence`, (v) => { presence = v ?? {}; });
-    watch(`rooms/${roomId}/public`, (v) => { publicState = v ?? {}; });
+    // public/doc はサーバーが書く JSON 文字列（buildChannels(state).public）
+    watch(`rooms/${roomId}/public`, (v) => { publicState = typeof v?.doc === 'string' ? JSON.parse(v.doc) : {}; });
     stopPresence = trackPresence(sdk, db, roomId, uid);
     emit();
   }

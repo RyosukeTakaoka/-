@@ -8,8 +8,8 @@
     "test": "node --test \"tests/**/*.test.js\"",
     "functions:install": "npm --prefix functions install",
     "functions:build": "npm --prefix functions run build",
-    "test:emulator": "npm run functions:build && firebase emulators:exec --only auth,database,functions --project demo-oni-game \"node --test --test-concurrency=1 tests-emulator/*.test.js\"",
-    "emulators": "npm run functions:build && firebase emulators:start --only auth,database,functions --project demo-oni-game"
+    "test:emulator": "npm run functions:build && firebase emulators:exec --only auth,database,functions,tasks --project demo-oni-game \"node --test --test-concurrency=1 tests-emulator/*.test.js\"",
+    "emulators": "npm run functions:build && firebase emulators:start --only auth,database,functions,tasks --project demo-oni-game"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.2",

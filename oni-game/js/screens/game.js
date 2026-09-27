@@ -1,10 +1,9 @@
 // ゲーム画面: 地図（ゲームボード）＋HUD
-// 表示はすべて getPlayerView()（見せてよい情報）から作る。
+// 表示はすべて gameService.getView()（その人に見せてよい情報）から作る。ゲームの状態は直接読まない。
 
 import { fromHtml, toast } from '../utils/dom.js';
-import {
-  gameStore, getPlayerView, updatePosition, requestCapture, requestNewDestination, tickGame, abortGame, PHASE,
-} from '../game/gameState.js';
+import { gameService } from '../services/gameService.js';
+import { PHASE } from '../game/gameEngine.js';
 import { CAPTURE_FAILURE_MESSAGE } from '../game/capture.js';
 import { createBoard } from '../map/map.js';
 import { addStartMarker, addAreaCircle } from '../map/markers.js';
@@ -45,7 +44,7 @@ export const gameScreen = (() => {
   let goTo = null; // navigate
   let leaving = false;
 
-  const view = () => getPlayerView(viewerId);
+  const view = () => gameService.getView(viewerId);
 
   /** 位置の共有やダミーの動きを止める（終了したら必ず止める） */
   function stopLocationSharing() {
@@ -58,11 +57,11 @@ export const gameScreen = (() => {
       if (entry.id <= lastLogId) continue;
       lastLogId = entry.id;
       if (entry.type === 'mission_start') {
-        const mine = getPlayerView(viewerId).self?.mission;
+        const mine = v.self?.mission;
         toast(mine?.destination ? '🎯 ミッション発生！ 制限時間内に目的地へ向かえ' : entry.text, 3500);
         navigator.vibrate?.([200, 100, 200, 100, 200]);
       } else if (entry.type === 'reveal') {
-        const self = gameStore.getState().players.find((p) => p.id === viewerId);
+        const self = v.self;
         if (self?.status !== 'active') continue;
         toast(self.role === 'hunter' ? '🔔 逃走者の可能性エリアが更新された' : '⚠ あなたの可能性エリアが鬼に公開された');
         navigator.vibrate?.([80, 60, 80]);
@@ -117,9 +116,9 @@ export const gameScreen = (() => {
     notifyOwnMissionResult(v);
     layer?.update(v);
     missionLayer?.update(v);
+    notifyOwnBlurChange(v); // 本人向けの通知を、全員向けのログの通知より先に並べる（通知は順番に表示される）
     notifyNewLogs(v);
-    notifyOwnBlurChange(v); // ログの通知より後（本人向けの通知を優先して表示する）
-    devPanel?.update(gameStore.getState().players, viewerId);
+    if (v.self) devPanel?.update([v.self, ...v.others], viewerId);
     root.querySelector('#game-end').hidden = !(v.phase === PHASE.PLAYING && v.self?.isHost);
     if (v.phase === PHASE.FINISHED && !leaving) {
       // 終了: 位置の監視を止めて結果画面へ（結果画面は位置情報を使わない）
@@ -137,7 +136,7 @@ export const gameScreen = (() => {
     } else {
       stopRealtime.push(
         watchPosition(
-          (pos) => updatePosition(selfId, pos),
+          (pos) => gameService.reportPosition(selfId, pos),
           (err) => toast(err.message, 4000),
         ),
       );
@@ -153,13 +152,14 @@ export const gameScreen = (() => {
       leaving = false;
       goTo = navigate;
       root.append(fromHtml(TEMPLATE));
-      const state = gameStore.getState();
-      viewerId = state.selfId;
+      const session = gameService.getSession();
+      viewerId = session.selfId;
+      const initialView = view();
       lastLogId = 0;
 
       if (isDevMode) {
         devPanel = createDevPanel({
-          players: state.players,
+          players: [initialView.self, ...initialView.others],
           viewerId,
           onChange: (id) => {
             viewerId = id;
@@ -170,44 +170,44 @@ export const gameScreen = (() => {
       }
 
       root.querySelector('#btn-capture').addEventListener('click', () => {
-        const result = requestCapture(viewerId);
+        const result = gameService.requestCapture(viewerId);
         if (!result.ok) toast(CAPTURE_FAILURE_MESSAGE[result.reason]);
         else navigator.vibrate?.([100, 50, 100]);
       });
       root.querySelector('#mission-reroll').addEventListener('click', () => {
         if (!confirm('目的地を変更しますか？（1ゲームにつき1回だけ使えます）')) return;
-        const result = requestNewDestination(viewerId);
+        const result = gameService.requestNewDestination(viewerId);
         toast(result.ok ? '目的地を変更しました' : '目的地を変更できませんでした');
       });
       root.querySelector('#game-fit').addEventListener('click', () => {
-        const { area } = gameStore.getState();
+        const { area } = view();
         board?.fitCircle(area.center, area.radiusM);
       });
       root.querySelector('#game-end').addEventListener('click', () => {
-        if (confirm('ゲームを終了しますか？')) abortGame();
+        if (confirm('ゲームを終了しますか？')) gameService.abortGame();
       });
 
-      cleanups.push(gameStore.subscribe(render));
+      cleanups.push(gameService.subscribe(render));
       const ticker = setInterval(() => {
-        tickGame();
+        gameService.tick();
         const v = view();
         renderClock(root, v);
         renderMissionPanel(root, v);
       }, 250);
       cleanups.push(() => clearInterval(ticker));
 
-      startLocationSharing(state.selfId);
+      startLocationSharing(session.selfId);
       render();
 
-      createBoard(root.querySelector('#game-map'), { center: state.area.center, zoom: 16 }).then((b) => {
+      createBoard(root.querySelector('#game-map'), { center: initialView.area.center, zoom: 16 }).then((b) => {
         if (disposed) return b.destroy();
         board = b;
-        const { area } = gameStore.getState();
+        const { area } = view();
         addAreaCircle(board, area);
         addStartMarker(board, area.center);
         missionLayer = createMissionLayer(board);
         layer = createPlayerLayer(board);
-        if (isDevMode) cleanups.push(board.onClick((p) => updatePosition(viewerId, p)));
+        if (isDevMode) cleanups.push(board.onClick((p) => gameService.reportPosition(viewerId, p)));
         board.fitCircle(area.center, area.radiusM);
         render();
       });

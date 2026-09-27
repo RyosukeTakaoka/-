@@ -1,6 +1,8 @@
 # STEP 7-A 設計レビュー：ゲームの権威をサーバーへ移す
 
-> 状態: レビュー待ち（承認後に STEP 7-B 以降を実装）。この文書の時点では Firebase SDK・Cloud Functions のコードは追加していない。
+> 状態: 7-A 承認済み。7-A2（Firebase なしの準備）実装済み。7-B 以降は未着手（Firebase SDK・Cloud Functions のコードは未追加）。
+>
+> **7-A2 での見直し**: GPS 由来のデータの持ち方を再検討し、「端末は `/locations` にだけ書き、公開用の位置はサーバーが作る（案B）」に変更した（→ 11章）。6章・7章・10章はこの結論に合わせて更新済み。
 
 方針は「Firebase を追加する」ではなく「**ゲームの判定をすべてサーバー側で確定させ、クライアントは要求と表示だけにする**」。
 
@@ -118,12 +120,12 @@
 
 ## 6. データ構造（RTDB）
 
-**GPS の更新ごとに Cloud Functions を動かさない構成**にする。
+**GPS → サーバー専用の実位置 → Cloud Functions → 公開用の派生データ** の一方向にする（11章の案B）。
 
-- 位置の書き込みはクライアントから RTDB へ直接行い、ルールで「誰がどこに書けて、誰が読めるか」を制限する
-- 関数は、要求（呼び出し型）と予約実行のときだけ動く
-- 実位置は、関数が必要な瞬間（確保・到達・公開・ミッション開始）にだけ読む
-- こうすると、関数の実行回数が GPS の頻度ではなく**ゲームのイベント数**に比例する
+- 端末が書けるのは自分の `/locations/{roomId}/{uid}` だけ。クライアントからは誰も読めない
+- 鬼・仲間の位置（`channels/hunterPositions`・`channels/runnerPositions`）は、サーバーが実位置から作る派生データ。端末は書けない
+- 実位置の書き込みで動く関数（`onLocationWritten`）が、検証（メンバー・ゲーム中・役割・新しさ・不自然な移動）をしてから、見てよい人がいるチャンネルにだけ書く
+- 確保・到達・公開・ミッション開始は、サーバーが `/locations` の実位置を読んで判定する
 
 ```
 /roomCodes/{code}                       → roomId（参加は joinRoom 経由。クライアントは読めない）
@@ -137,8 +139,8 @@
     mission: { index, total, startedAt, endsAt } | null,
     missionsCompleted, lastMission: { index, success, failure, cancelled },
     runnersRemaining, runnersTotal, log[], result: { winner, reason }
-/rooms/{roomId}/channels/hunterPositions/{uid}   { lat, lng, t }  鬼の実位置（鬼本人が書く）
-/rooms/{roomId}/channels/runnerPositions/{uid}   { lat, lng, t }  逃走者の実位置（仲間用。本人が書く）
+/rooms/{roomId}/channels/hunterPositions/{uid}   { lat, lng }  鬼の位置（サーバーが実位置から作る）
+/rooms/{roomId}/channels/runnerPositions/{uid}   { lat, lng }  逃走者の位置（仲間用。サーバーが実位置から作る）
 /rooms/{roomId}/channels/possibleAreas/{uid}     { center, radiusM, publishedAt }（サーバーが書く）
 /rooms/{roomId}/views/{uid}             本人だけのデータ（サーバーが書く）
     blurM, possibleArea（自分の円）, mission: { index, endsAt, arrivalRadiusM, result, destination, canReroll },
@@ -154,7 +156,8 @@
 
 補足:
 
-- 逃走者は1回の書き込み（RTDB の複数パス同時更新）で `/locations`（サーバー用）と `channels/runnerPositions`（仲間用）の両方に書く。鬼は `/locations` と `channels/hunterPositions` に書く。ルールはパスごとに判定され、役割に合わないパスへの書き込みは拒否される
+- 端末は役割に関係なく `/locations/{roomId}/{自分}` にだけ書く。どのチャンネルに出すか（出さないか）はサーバーが役割と設定から決める（`buildChannels` と同じ規則）
+- 派生データに入れるのは緯度経度だけ（精度・記録時刻は入れない）
 - `views/{uid}` は「本人だけのデータ」に限る。頻繁に変わる共有データ（鬼・仲間の位置）は audience（見てよい人の集まり）ごとの `channels` に分ける。人数分の views を毎回書き直すと、書き込みが人数の2乗で増えるため
 - クライアントは `public`・読める `channels`・自分の `views` を組み立てて、今の `buildPlayerView()` と**同じ形**のビューを作る（`assembleView()`）。「サーバーがチャンネルに分けたもの（`buildChannels(state)`）を組み立てると、全員について `buildPlayerView(state, uid)` と一致する」ことをテストで保証し、STEP 2〜5 の表示ルールと食い違わないようにする
 
@@ -163,14 +166,15 @@
 - 既定はすべて拒否。`/private` と `/roomCodes` はクライアントから読み書きとも不可（関数は Admin SDK で読み書きする）
 - `rooms/{roomId}` の階層では `.read` / `.write` を許可しない（下の全データに効いてしまうため）
 - 役割・状態の判定には、サーバーだけが書ける `public/players/{uid}` を使う
-- 位置の書き込みは「本人のパス」「ゲーム中」「今の役割に合うパス」「形式が正しい（lat/lng の範囲など）」「`t` がサーバー時刻」「前回から2秒以上たっている」をルールで確認する
+- クライアントが書ける GPS 由来のデータは `/locations/{roomId}/{自分}` だけ。ルールで「本人のパス」「ゲーム中」「参加中（脱落していない）」「形式が正しい（lat/lng の範囲など）」「`t` がサーバー時刻」「前回から2秒以上たっている」を確認する
+- `channels/*` はすべてサーバーだけが書ける
 
 | データ | 自分 | 他の逃走者 | 鬼 | 脱落者 | サーバー |
 | --- | --- | --- | --- | --- | --- |
 | 自分の実位置 `/locations/{r}/{自分}` | write のみ（ゲーム中） | × | × | × | read / delete |
 | 他人の実位置 `/locations/{r}/{他人}` | × | × | × | × | read / delete |
-| 鬼の位置 `channels/hunterPositions` | 自分が参加中の鬼なら自分の分を write | read（設定 ON のとき） | read | read（設定 ON のとき） | delete |
-| 逃走者の位置 `channels/runnerPositions` | 自分が参加中の逃走者なら自分の分を write | read（参加中の逃走者のみ） | **×** | **×** | delete |
+| 鬼の位置 `channels/hunterPositions` | （書けない） | read（設定 ON のとき） | read | read（設定 ON のとき） | write |
+| 逃走者の位置 `channels/runnerPositions` | （書けない。参加中の逃走者なら read） | read（参加中の逃走者のみ） | **×** | **×** | write |
 | 可能性エリア `channels/possibleAreas` | × | × | read（参加中の鬼のみ） | × | write |
 | `/private/{r}/*` | × | × | × | × | read / write |
 | 自分の view `views/{自分}` | read | × | × | × | write |
@@ -261,7 +265,7 @@ tests/rules/  tests/functions/
 | **7-A2（追加提案）** | Firebase なしの準備: `gameEngine.js`・`nextDueAt`・`viewChannels.js`（`buildChannels`/`assembleView`）、`privacyArea.js` の移動、`gameService` の窓口と `LocalGameService`、画面が生の状態を読む箇所の修正 | なし | 既存101件＋新しいテスト（組み立てたビューが全員分 `buildPlayerView` と一致など）が通る。`?dev` の動作が STEP 6 と同じ |
 | **7-B** | Firebase プロジェクト、エミュレーター設定、匿名認証、`createRoom`/`joinRoom`、members・在席・ロビーの同期 | 追加開始 | エミュレーター上で2つのブラウザが同じ部屋に入れる |
 | **7-C** | `startGame`（サーバーで役割・秘密値・スケジュールを作成）、`public`・`views` の書き込みと購読、`assembleView` による表示 | | 各自の画面が端末内モードと同じ表示になる |
-| **7-D** | 自分の GPS の送信（間引き・複数パス同時更新）と、`/locations`・`channels` のルール | | 鬼のアカウントで `runnerPositions`・`/locations` が読めない |
+| **7-D** | 自分の GPS の送信（`/locations` だけ・間引きあり）、`onLocationWritten`（検証して派生チャンネルへ）、ルール、書き込み回数の実測 | | 鬼のアカウントで `runnerPositions`・`/locations` が読めない |
 | **7-E** | `requestCapture`（サーバーの実位置・位置の新しさ・クールダウン・トランザクション） | | 同時に確保した場合も1人だけ・時間切れ後は拒否 |
 | **7-F** | `claimArrival`・`rerollDestination`・ミッション終了時の判定、blurM の変更 | | 到達・失敗・無効が端末内モードと一致 |
 | **7-G** | `advanceGame` の予約（Cloud Tasks）、公開・ミッション・時間切れ、終了時の破棄、`results/public`・`personal`、掃除係 | | 誰も操作しなくても最後まで進み、終了後に `/locations`・秘密値・`possibleAreas` が消える |
@@ -280,9 +284,10 @@ tests/rules/  tests/functions/
 - クライアントが `public/result/winner` を書く → 拒否
 - クライアントがミッション成功（`views/*/mission/result`）を書く → 拒否
 - クライアントが `/private/*` を書く → 拒否
-- 他人の `/locations/*` や他人の `channels` を書く → 拒否
+- 他人の `/locations/*` を書く → 拒否
+- 自分の分でも `channels/*` を書く → 拒否（派生データはサーバーだけが書く）
 - ゲーム外（ロビー・終了後）に位置を書く → 拒否
-- 鬼が `runnerPositions` に書く（役割に合わないパス）→ 拒否
+- 脱落者が `/locations` に書く → 拒否
 - 2秒未満の連続書き込み、`t` の偽装 → 拒否
 - `rooms/{roomId}` や `/rooms` 全体を読む → 拒否（部屋の一覧が見えない）
 - `requestCapture` を鬼以外・クールダウン中・終了後に呼ぶ → 拒否
@@ -304,3 +309,59 @@ tests/rules/  tests/functions/
 - **GPS の偽装**: 位置は本質的に端末の申告であり、サーバーは本物かどうかを確かめられない。明らかに不自然な移動（例: 秒速12m超）を記録・無視するなどの対策はできるが、完全には防げない
 - **受信済みデータ**: 権限を失う前に受け取ったデータは、その端末に残る
 - **アルゴリズムの公開**: 可能性エリアのアルゴリズムはクライアントにも配られる（公開されている）。安全性は秘密値がサーバーにしかないことに依存する
+
+---
+
+## 11. 7-A2: GPS データの保存・公開構造の比較と結論
+
+| 観点 | A: 端末が `locations` と `channels` の両方へ書く | **B: 端末は `locations` だけ。公開用はサーバーが作る** | C1: 鬼だけ A、逃走者は B | C2: サーバーが一定間隔でまとめて公開 |
+| --- | --- | --- | --- | --- |
+| セキュリティ | 端末が「他人に見える位置」を直接書く。サーバーが検証する前に他人へ届く。役割が変わった直後に書けてしまう隙や、止まった端末の古いデータが残る問題をルールだけで防ぐ必要がある | **一方向**。端末が書ける GPS 由来のデータは自分の実位置1か所だけで、誰も読めない。公開前にサーバーが検証でき、役割の変化（脱落・増え鬼）もサーバーが同時に反映できる | 逃走者は B と同じ。鬼の位置だけ端末が直接公開する | B と同じ |
+| 書き込み回数（位置の更新1回あたり） | 端末の書き込み1回（複数パス同時更新）。関数の実行なし | 端末1回 + 関数1回 + 派生データの書き込み（見てよい人がいるときだけ）1回 | 鬼は A、逃走者は B | 端末1回。派生データはゲームごと・一定間隔ごと |
+| リアルタイム性 | 最も速い | 関数の起動分だけ遅れる（通常は1秒未満〜数秒。コールドスタート時はそれ以上） | 鬼の位置は速い | 間隔分だけ遅れる |
+| 実装の複雑さ | ルールが複雑（パスごとの役割判定・レート制限が2か所）。端末が役割に応じて書き先を変える | 関数が1つ増える。端末は役割に関係なく1か所に書くだけ。ルールは単純 | 2方式の混在で複雑 | ゲームごとの定期実行が必要（「毎秒処理しない」方針に反する） |
+
+**結論: B を採用する。**
+
+- 「実位置 → サーバー → 公開用データ」の一方向になり、STEP 3〜5 の「実位置と表示用情報の分離」がデータベースの構造でもそのまま成り立つ
+- 派生データの中身は `buildChannels(state)` と同じ規則で作る（7-A2 で実装・テスト済み）ので、表示ルールが1か所に保たれる
+- 7-A で書いた「GPS の更新ごとに関数を動かさない」は取り下げる。関数の実行回数は GPS の頻度に比例する
+  - 例: 10人・5秒おき・30分のゲームで約3,600回
+  - 抑える工夫:
+    - 端末側で間引く（例: 5秒おき、または10m以上動いたとき）
+    - 見てよい人がいないチャンネルには書かない（例: 鬼の位置を見せない設定で鬼が1人のとき、参加中の逃走者が1人だけのとき）
+    - 脱落者は送信しない（ルールで拒否）
+- 7-D で実際の書き込み回数・遅延を測り、コストが問題になった場合の代替として C1（鬼の位置だけ端末が直接公開）を残しておく。鬼の位置は仕様上もともと公開する情報なので、C1 にしても逃走者の実位置の扱いは変わらない
+- C2 は採用しない。ゲームごとの定期実行が必要で遅延も増えるため
+
+## 12. 7-A2 で実装したこと（Firebase なし）
+
+| ファイル | 責務 |
+| --- | --- |
+| `js/game/gameEngine.js`（新規） | 状態遷移のすべて。`state + 操作 + ctx(now, rng) → { state, events, result }`。ブラウザ API・Firebase・モジュール共有状態・`Date.now()` に依存しない |
+| `js/game/gameState.js`（書き換え） | 端末内モードのストア。端末時刻と乱数を決めて gameEngine を呼ぶだけ。Firebase を持たない |
+| `js/game/viewChannels.js`（新規） | `buildChannels`（サーバー用）/ `readableChannels`（誰が何を読めるか = ルールの仕様）/ `assembleView`（クライアント用） |
+| `js/game/privacyArea.js`（`map/` から移動） | 表示ではなくルールなので `game/` へ。サーバーでもそのまま使える |
+| `js/game/visibility.js`（補助関数を export） | 基準の実装 `buildPlayerView` はそのまま |
+| `js/services/gameService.js`（新規） | 画面の窓口（インターフェースと、今使う実装） |
+| `js/services/localGameService.js`（新規） | 端末内モードの実装（gameState + ダミーの部屋） |
+| `js/screens/*.js` | `gameStore`・`gameState`・`roomService` を直接使わず、`gameService` だけを使う |
+
+確認したこと（テスト）:
+
+- **gameEngine 自体**：
+  - ブラウザ API・Firebase・画面・地図に依存しない（ソースの検査）
+  - モジュール直下の変更可能な変数と `Date.now()` を持たない
+  - `ctx.now` が無いとエラーになる（時刻は外から注入）
+  - 乱数・ゲームIDを外から渡せ、同じ入力なら同じ結果になる
+  - 凍結した state を渡しても最後まで動く（入力を書き換えない）
+- **gameState.js**：ストア・gameEngine・visibility にしか依存しない
+- **resultSummary**：位置情報・秘密値を持たない入力で同じ結果を作れる
+- **privacyArea**：Node.js でそのまま動く
+- **viewChannels**：
+  - 全員について「読めるチャンネルから組み立てたビュー = `buildPlayerView`」が一致する（ロビー・ミッション中・脱落・増え鬼・設定 OFF・終了後）
+  - 鬼・脱落者が読めるチャンネルに逃走者の実位置が入っていない
+  - 共有チャンネルに秘密値・未来のミッション予定・目的地・位置の精度や時刻が入っていない
+- **画面**：`gameState.js`・`gameStore`・`roomService`・Firebase を使っていない
+
+残っている、端末内モード専用の部分: `dev/dummySimulator.js` は開発用のダミーを動かすためにストアを直接読む。Firebase 版には含めない。

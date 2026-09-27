@@ -31,12 +31,13 @@ export const DISPLAY = Object.freeze({
   AREA: 'possibleArea', // 可能性エリア
 });
 
-const HIDDEN = Object.freeze({ kind: DISPLAY.HIDDEN });
+// 以下の補助関数は viewChannels.js（Firebase 用に同じ情報を公開範囲ごとに分けたもの）でも使う
+export const HIDDEN = Object.freeze({ kind: DISPLAY.HIDDEN });
 
-const exact = (pos) => ({ kind: DISPLAY.EXACT, position: { lat: pos.lat, lng: pos.lng } });
+export const exact = (pos) => ({ kind: DISPLAY.EXACT, position: { lat: pos.lat, lng: pos.lng } });
 
 /** 公開済みの可能性エリア → ビュー用（中心・半径・公開時刻だけ） */
-const possibleArea = (playerId, published) => ({
+export const possibleArea = (playerId, published) => ({
   kind: DISPLAY.AREA,
   playerId,
   type: 'possibleArea',
@@ -46,7 +47,7 @@ const possibleArea = (playerId, published) => ({
 });
 
 /** 相手に見せてよいプレイヤー情報（位置・履歴の詳細・ぼかし精度は含めない） */
-function publicInfo(p) {
+export function publicInfo(p) {
   return {
     id: p.id,
     name: p.name,
@@ -60,7 +61,7 @@ function publicInfo(p) {
   };
 }
 
-const isActive = (p, role) => p?.role === role && p.status === STATUS.ACTIVE;
+export const isActive = (p, role) => p?.role === role && p.status === STATUS.ACTIVE;
 
 function displayFor(viewer, target, state) {
   if (state.phase !== 'playing' || !viewer) return HIDDEN;
@@ -87,7 +88,7 @@ function displayFor(viewer, target, state) {
 }
 
 /** 全員に見せてよいミッション情報（目的地・発生予定は含めない） */
-function sharedMissionInfo(missions) {
+export function sharedMissionInfo(missions) {
   const active = missions?.active;
   const ended = (missions?.history ?? []).filter((h) => !h.skipped);
   const last = ended.at(-1);
@@ -99,7 +100,7 @@ function sharedMissionInfo(missions) {
 }
 
 /** 本人にだけ見せるミッション情報（自分の目的地と結果） */
-function ownMissionInfo(missions, viewerId) {
+export function ownMissionInfo(missions, viewerId) {
   const active = missions?.active;
   const p = active?.participants[viewerId];
   if (!p) return null;

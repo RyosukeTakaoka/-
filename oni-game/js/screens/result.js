@@ -1,14 +1,13 @@
 // 結果画面
-// 表示に使うのは resultSummary（resultViewFor で本人向けに絞ったもの）だけ。
+// 表示に使うのは gameService.getResultView()（resultSummary を resultViewFor で本人向けに絞ったもの）だけ。
 // 位置情報（実位置・可能性エリア・目的地）は扱わない。
 
 import { el, fromHtml, clearToasts } from '../utils/dom.js';
-import { gameStore, prepareRematch, resetGame } from '../game/gameState.js';
-import { resultViewFor, MISSION_SUMMARY_STATUS, PERSONAL_RESULT } from '../game/resultSummary.js';
+import { gameService } from '../services/gameService.js';
+import { MISSION_SUMMARY_STATUS, PERSONAL_RESULT } from '../game/resultSummary.js';
 import { ROLE_LABEL } from '../game/player.js';
 import { WINNER } from '../game/outcome.js';
 import { formatClock } from '../game/gameTimer.js';
-import { roomService } from '../services/roomService.js';
 
 const TEMPLATE = `
 <div class="screen result">
@@ -102,8 +101,8 @@ export const resultScreen = {
   mount(root, { navigate, viewerId }) {
     clearToasts(); // ゲーム中の通知を結果画面に持ち込まない
     root.append(fromHtml(TEMPLATE));
-    const state = gameStore.getState();
-    const view = resultViewFor(state.resultSummary, viewerId ?? state.selfId);
+    const session = gameService.getSession();
+    const view = gameService.getResultView(viewerId ?? session.selfId);
     if (!view) {
       navigate('home');
       return;
@@ -121,18 +120,17 @@ export const resultScreen = {
     renderPlayers(root.querySelector('#result-players'), view);
     renderMissions(root.querySelector('#result-missions'), view);
 
-    const isHost = state.room?.hostId === state.selfId;
+    const { isHost } = session;
     root.querySelector('#result-again').hidden = !isHost;
     root.querySelector('#result-again-hint').textContent = isHost
       ? '同じメンバー・同じ設定でロビーに戻ります（開始地点は設定し直します）'
       : 'ホストが「もう一度遊ぶ」を選ぶのを待っています';
     root.querySelector('#result-again').addEventListener('click', () => {
-      prepareRematch();
+      gameService.prepareRematch();
       navigate('create', { rematch: true });
     });
     root.querySelector('#result-home').addEventListener('click', async () => {
-      await roomService.leaveRoom();
-      resetGame();
+      await gameService.leaveRoom();
       navigate('home');
     });
   },

@@ -2,9 +2,7 @@
 
 import { el, fromHtml, toast } from '../utils/dom.js';
 import { formatDistance } from '../utils/distance.js';
-import { gameStore, setPlayers, startGame, resetGame } from '../game/gameState.js';
-import { createInitialPositions } from '../dev/dummyData.js';
-import { roomService } from '../services/roomService.js';
+import { gameService } from '../services/gameService.js';
 
 const TEMPLATE = `
 <div class="screen lobby">
@@ -49,6 +47,7 @@ function renderRules(dl, settings) {
   dl.replaceChildren(...rows.flatMap(([k, v]) => [el('dt', { text: k }), el('dd', { text: v })]));
 }
 
+/** session（gameService.getSession()）だけを使って描画する */
 function renderPlayers(root, state) {
   const list = root.querySelector('#player-list');
   list.replaceChildren(
@@ -60,7 +59,7 @@ function renderPlayers(root, state) {
   root.querySelector('#player-count').textContent = `(${state.players.length}人)`;
 
   const needed = state.settings.hunterCount + 1;
-  const isHost = state.room?.hostId === state.selfId;
+  const { isHost } = state;
   const start = root.querySelector('#lobby-start');
   start.disabled = !isHost || state.players.length < needed;
   root.querySelector('#lobby-start-hint').textContent = !isHost
@@ -76,12 +75,12 @@ export const lobbyScreen = (() => {
   return {
     mount(root, { navigate }) {
       root.append(fromHtml(TEMPLATE));
-      const state = gameStore.getState();
+      const state = gameService.getSession();
       root.querySelector('#room-code').textContent = state.room.code;
       renderRules(root.querySelector('#lobby-rules'), state.settings);
 
       root.querySelector('#lobby-invite').addEventListener('click', async () => {
-        const { room } = gameStore.getState();
+        const { room } = gameService.getSession();
         const url = `${location.origin}${location.pathname}?room=${room.code}`;
         const text = `リアル鬼ごっこに参加しよう！ルームコード: ${room.code}`;
         try {
@@ -95,31 +94,25 @@ export const lobbyScreen = (() => {
         }
       });
 
-      root.querySelector('#lobby-add-dummy').addEventListener('click', () => roomService.addDummyPlayer());
+      root.querySelector('#lobby-add-dummy').addEventListener('click', () => gameService.addDummyPlayer());
 
       root.querySelector('#lobby-leave').addEventListener('click', async () => {
         if (!confirm('ルームを解散してホームに戻りますか？')) return;
-        await roomService.leaveRoom();
-        resetGame();
+        await gameService.leaveRoom();
         navigate('home');
       });
 
       root.querySelector('#lobby-start').addEventListener('click', () => {
-        const s = gameStore.getState();
         try {
-          // ダミー段階: ダミーはエリア内に仮配置、自分は GPS が届くまで開始地点にいるものとする
-          startGame({ initialPositions: createInitialPositions(s.players, s.area) });
+          gameService.startGame();
           navigate('game');
         } catch (err) {
           toast(err.message);
         }
       });
 
-      // ルームの参加者の変化（今はダミー、将来は Firebase）をゲーム状態に反映
-      cleanups.push(
-        roomService.onPlayersChanged((players) => setPlayers(players)),
-      );
-      cleanups.push(gameStore.subscribe((s) => renderPlayers(root, s)));
+      // 参加者の変化（今はダミー、将来は Firebase）は gameService から通知される
+      cleanups.push(gameService.subscribe(() => renderPlayers(root, gameService.getSession())));
       renderPlayers(root, state);
     },
 

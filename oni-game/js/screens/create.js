@@ -13,13 +13,10 @@ import {
   MAX_HUNTERS,
   settingsWarnings,
 } from '../game/settings.js';
-import {
-  gameStore, updateSettings, setStartPoint, enterLobby, addExclusionZone, clearExclusionZones, returnToLobby, resetGame,
-} from '../game/gameState.js';
+import { gameService } from '../services/gameService.js';
 import { createBoard } from '../map/map.js';
 import { addStartMarker, addAreaCircle, CIRCLE_STYLE } from '../map/markers.js';
 import { getCurrentPosition } from '../services/locationService.js';
-import { roomService } from '../services/roomService.js';
 import { DEFAULT_CENTER } from '../dev/dummyData.js';
 
 const TEMPLATE = `
@@ -145,8 +142,8 @@ export const createScreen = (() => {
   }
 
   function chooseStart(point) {
-    setStartPoint(point);
-    const { area } = gameStore.getState();
+    gameService.setStartPoint(point);
+    const { area } = gameService.getSession();
     board?.fitCircle(area.center, area.radiusM);
   }
 
@@ -154,7 +151,7 @@ export const createScreen = (() => {
     mount(root, { navigate, hostName, rematch = false }) {
       disposed = false;
       root.append(fromHtml(TEMPLATE));
-      const { settings } = gameStore.getState();
+      const { settings } = gameService.getSession();
 
       root.querySelector('[data-slot=duration]').replaceWith(
         createOptionGroup({
@@ -162,7 +159,7 @@ export const createScreen = (() => {
           options: DURATION_OPTIONS_MIN,
           value: settings.durationMin,
           format: (v) => `${v}分`,
-          onChange: (v) => updateSettings({ durationMin: v }),
+          onChange: (v) => gameService.updateSettings({ durationMin: v }),
         }),
       );
       root.querySelector('[data-slot=radius]').replaceWith(
@@ -172,8 +169,8 @@ export const createScreen = (() => {
           value: settings.radiusM,
           format: formatDistance,
           onChange: (v) => {
-            updateSettings({ radiusM: v });
-            const { area } = gameStore.getState();
+            gameService.updateSettings({ radiusM: v });
+            const { area } = gameService.getSession();
             if (area) board?.fitCircle(area.center, area.radiusM);
           },
         }),
@@ -184,7 +181,7 @@ export const createScreen = (() => {
           options: BLUR_OPTIONS_M,
           value: settings.initialBlurM,
           format: formatDistance,
-          onChange: (v) => updateSettings({ initialBlurM: v }),
+          onChange: (v) => gameService.updateSettings({ initialBlurM: v }),
         }),
       );
 
@@ -194,7 +191,7 @@ export const createScreen = (() => {
           options: REVEAL_INTERVAL_OPTIONS_SEC,
           value: settings.revealIntervalSec,
           format: (v) => (v < 60 ? `${v}秒` : `${v / 60}分`),
-          onChange: (v) => updateSettings({ revealIntervalSec: v }),
+          onChange: (v) => gameService.updateSettings({ revealIntervalSec: v }),
         }),
       );
       root.querySelector('[data-slot=show-hunters]').replaceWith(
@@ -203,7 +200,7 @@ export const createScreen = (() => {
           options: [true, false],
           value: settings.showHuntersToRunners,
           format: (v) => (v ? '見せる' : '見せない'),
-          onChange: (v) => updateSettings({ showHuntersToRunners: v }),
+          onChange: (v) => gameService.updateSettings({ showHuntersToRunners: v }),
         }),
       );
       root.querySelector('[data-slot=capture]').replaceWith(
@@ -212,7 +209,7 @@ export const createScreen = (() => {
           options: CAPTURE_RADIUS_OPTIONS_M,
           value: settings.captureRadiusM,
           format: (v) => `${v}m`,
-          onChange: (v) => updateSettings({ captureRadiusM: v }),
+          onChange: (v) => gameService.updateSettings({ captureRadiusM: v }),
         }),
       );
       root.querySelector('[data-slot=zombie]').replaceWith(
@@ -221,13 +218,13 @@ export const createScreen = (() => {
           options: [false, true],
           value: settings.zombieMode,
           format: (v) => (v ? 'ON' : 'OFF'),
-          onChange: (v) => updateSettings({ zombieMode: v }),
+          onChange: (v) => gameService.updateSettings({ zombieMode: v }),
         }),
       );
 
       const changeHunters = (delta) => {
-        const next = Math.min(MAX_HUNTERS, Math.max(MIN_HUNTERS, gameStore.getState().settings.hunterCount + delta));
-        updateSettings({ hunterCount: next });
+        const next = Math.min(MAX_HUNTERS, Math.max(MIN_HUNTERS, gameService.getSession().settings.hunterCount + delta));
+        gameService.updateSettings({ hunterCount: next });
       };
       root.querySelector('#hunter-minus').addEventListener('click', () => changeHunters(-1));
       root.querySelector('#hunter-plus').addEventListener('click', () => changeHunters(1));
@@ -237,10 +234,10 @@ export const createScreen = (() => {
         exclusionMode = !exclusionMode;
         modeButton.textContent = exclusionMode ? '✅ 除外エリアの追加を終える' : '🚫 地図タップで除外エリアを置く';
         modeButton.classList.toggle('btn-danger', exclusionMode);
-        renderStart(root, gameStore.getState());
+        renderStart(root, gameService.getSession());
         root.querySelector('#create-map').scrollIntoView({ behavior: 'smooth', block: 'center' });
       });
-      root.querySelector('#exclusion-clear').addEventListener('click', () => clearExclusionZones());
+      root.querySelector('#exclusion-clear').addEventListener('click', () => gameService.clearExclusionZones());
 
       if (rematch) {
         // もう一度遊ぶ: 同じルーム・メンバー・設定。開始地点と除外エリアは設定し直す
@@ -250,8 +247,7 @@ export const createScreen = (() => {
       root.querySelector('#create-back').addEventListener('click', async () => {
         if (rematch) {
           if (!confirm('ルームを解散してホームに戻りますか？')) return;
-          await roomService.leaveRoom();
-          resetGame();
+          await gameService.leaveRoom();
         }
         navigate('home');
       });
@@ -270,30 +266,28 @@ export const createScreen = (() => {
       });
 
       root.querySelector('#create-room').addEventListener('click', async () => {
-        const state = gameStore.getState();
+        const state = gameService.getSession();
         if (!state.startPoint) {
           toast('ゲーム開始地点を設定してください');
           return;
         }
         if (rematch) {
-          returnToLobby();
+          gameService.returnToLobby();
           navigate('lobby');
           return;
         }
-        let created;
         try {
-          created = await roomService.createRoom({ hostName });
+          await gameService.createRoom({ hostName });
         } catch (err) {
           toast(err.message);
           return;
         }
-        enterLobby(created);
         navigate('lobby');
       });
 
-      unsubscribe = gameStore.subscribe((state) => renderStart(root, state));
+      unsubscribe = gameService.subscribe(() => renderStart(root, gameService.getSession()));
 
-      const initial = gameStore.getState();
+      const initial = gameService.getSession();
       createBoard(root.querySelector('#create-map'), { center: initial.startPoint ?? DEFAULT_CENTER, zoom: 15 }).then(
         (b) => {
           if (disposed) {
@@ -301,9 +295,9 @@ export const createScreen = (() => {
             return;
           }
           board = b;
-          board.onClick((p) => (exclusionMode ? addExclusionZone(p) : chooseStart(p)));
+          board.onClick((p) => (exclusionMode ? gameService.addExclusionZone(p) : chooseStart(p)));
           if (initial.area) board.fitCircle(initial.area.center, initial.area.radiusM);
-          renderStart(root, gameStore.getState());
+          renderStart(root, gameService.getSession());
         },
       );
       renderStart(root, initial);

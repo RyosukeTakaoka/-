@@ -10,7 +10,7 @@
 //   published: { [runnerId]: { center, radiusM, epoch, publishedAt } } … これだけがビューに出る
 //   epoch:     最後に公開した公開回数
 
-import { computePossibleArea, createPrivacySecret } from '../map/privacyArea.js';
+import { computePossibleArea, createPrivacySecret } from './privacyArea.js';
 import { activeRunners } from './player.js';
 import { secureRandom } from '../utils/random.js';
 

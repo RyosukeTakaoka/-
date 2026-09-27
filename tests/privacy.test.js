@@ -5,7 +5,7 @@ import { distanceM, destinationPoint, toLocalXY } from '../oni-game/js/utils/dis
 import { createSeededRng } from '../oni-game/js/utils/random.js';
 import {
   computePossibleArea, createPrivacySecret, cellCenterOf, MIN_OFFSET_RATIO,
-} from '../oni-game/js/map/privacyArea.js';
+} from '../oni-game/js/game/privacyArea.js';
 import { publishIfDue, revealEpoch, nextRevealAt } from '../oni-game/js/game/locationPublisher.js';
 import { buildPlayerView, DISPLAY } from '../oni-game/js/game/visibility.js';
 import {

@@ -2,8 +2,7 @@
 
 import { fromHtml, storage, toast } from '../utils/dom.js';
 import { sanitizeName, MAX_NAME_LENGTH } from '../game/player.js';
-import { resetGame } from '../game/gameState.js';
-import { roomService } from '../services/roomService.js';
+import { gameService } from '../services/gameService.js';
 
 const TEMPLATE = `
 <div class="screen home">
@@ -73,7 +72,7 @@ export const homeScreen = {
     root.querySelector('#home-create').addEventListener('click', () => {
       const name = readName(nameInput);
       if (!name) return;
-      resetGame();
+      gameService.resetGame();
       navigate('create', { hostName: name });
     });
 
@@ -81,7 +80,8 @@ export const homeScreen = {
       const name = readName(nameInput);
       if (!name) return;
       try {
-        await roomService.joinRoom({ code: codeInput.value.trim().toUpperCase(), name });
+        await gameService.joinRoom({ code: codeInput.value.trim().toUpperCase(), name });
+        navigate('lobby');
       } catch (err) {
         toast(err.message, 3500);
       }

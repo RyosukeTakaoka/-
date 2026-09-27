@@ -1,6 +1,6 @@
 // 端末の位置情報の取得
 // 実際のGPS座標はこのモジュールから game/ に渡る。
-// 鬼へ送る前には必ず map/privacyArea.js（STEP 3）でぼかすこと。
+// 鬼へ送る前には必ず game/privacyArea.js（STEP 3）でぼかすこと。
 
 const GEO_OPTIONS = { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 };
 

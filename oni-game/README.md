@@ -16,7 +16,7 @@
 | 4 | ミッションシステム | ✅ 完了 |
 | 5 | ミッション結果による精度変更 | ✅ 完了 |
 | 6 | ゲーム終了・結果画面 | ✅ 完了 |
-| 7 | Firebase連携 | 未着手 |
+| 7 | Firebase連携 | 7-A 設計レビュー・7-A2 準備（Firebase なし）完了。設計は [docs/step7-firebase-design.md](docs/step7-firebase-design.md) |
 | 8 | 実機テスト・改善 | 未着手 |
 
 ## 動かし方
@@ -107,7 +107,7 @@ Google Maps JavaScript API のキーは、仕組み上ブラウザに送られ�
 - 自分の位置は常に表示。逃走者は「鬼にどう見えているか」（自分の可能性エリア・青い円）も見られます
 - ロビー・ゲーム終了後は、誰の位置も表示しません
 
-### 可能性エリアの作り方（`js/map/privacyArea.js`）
+### 可能性エリアの作り方（`js/game/privacyArea.js`）
 
 R = その逃走者の現在の `blurM`（円の半径）
 
@@ -289,7 +289,10 @@ oni-game/
 │   │   ├── home.js / create.js / lobby.js / game.js / result.js
 │   │   └── components/     optionGroup.js（選択ボタン）・gameHud.js（ゲーム画面のHUD）・missionPanel.js（ミッション表示）
 │   ├── game/               ゲームのルール（DOMや地図に依存しない）
-│   │   ├── gameState.js    ゲーム全体の状態とアクション（開始・位置更新・確保・終了）
+│   │   ├── gameEngine.js   状態遷移のすべて（state + 操作 + 時刻・乱数 → 新しい state）。Firebase 版ではサーバーが使う
+│   │   ├── gameState.js    端末内モードのストア（gameEngine を呼ぶだけ）
+│   │   ├── viewChannels.js ビューを公開範囲ごとに分ける / 組み立てる（Firebase 版用）
+│   │   ├── privacyArea.js  可能性エリアの生成（実位置 → 円）
 │   │   ├── capture.js      確保のルール
 │   │   ├── outcome.js      勝敗の判定
 │   │   ├── visibility.js   誰に何を見せるか（画面はこの結果だけを表示）
@@ -308,12 +311,13 @@ oni-game/
 │   │   ├── loader.js       Google Maps API の読み込み
 │   │   ├── googleBoard.js  Google Maps 版ボード
 │   │   ├── fallbackBoard.js 簡易マップ版ボード
-│   │   ├── privacyArea.js  可能性エリアの生成（実位置 → 円）
 │   │   ├── missionLayer.js 自分の目的地・除外エリアの表示
 │   │   ├── markers.js      円・マーカーの見た目
 │   │   └── playerLayer.js  ビューに合わせてマーカーを更新
-│   ├── services/           外部とのやりとり（Firebase で差し替える層）
-│   │   ├── roomService.js  ルーム作成・参加・参加者
+│   ├── services/           画面とゲームの間の窓口（Firebase で差し替える層）
+│   │   ├── gameService.js  画面が使う唯一の窓口（読み取りと要求）
+│   │   ├── localGameService.js 端末内モードの実装
+│   │   ├── roomService.js  ダミーのルーム（端末内モード）
 │   │   └── locationService.js 端末のGPS
 │   ├── dev/                開発用（dummyData.js・dummySimulator.js・devPanel.js・devMode.js）
 │   └── utils/              汎用処理（distance.js / random.js / dom.js）

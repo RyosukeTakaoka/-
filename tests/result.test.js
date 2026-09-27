@@ -208,10 +208,10 @@ test('結果は位置情報なしの状態からでも作れる（positions・pr
 
 test('結果画面のコードは位置情報を読まない', () => {
   const source = readFileSync(new URL('../oni-game/js/screens/result.js', import.meta.url), 'utf8');
-  for (const word of ['positions', 'privacy', 'getPlayerView', 'possibleArea', 'destination', 'createBoard']) {
+  for (const word of ['positions', 'privacy', 'getPlayerView', 'possibleArea', 'destination', 'createBoard', 'gameStore']) {
     assert.ok(!source.includes(word), `result.js が ${word} を参照している`);
   }
-  assert.ok(source.includes('resultViewFor'));
+  assert.ok(source.includes('gameService.getResultView('), '結果は gameService.getResultView（resultViewFor）から受け取る');
 });
 
 // ---- もう一度遊ぶ ----

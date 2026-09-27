@@ -52,7 +52,12 @@ function renderPlayers(root, state) {
   const list = root.querySelector('#player-list');
   list.replaceChildren(
     ...state.players.map((p) => {
-      const tags = [p.isHost && '👑 ホスト', p.id === state.selfId && 'あなた', p.isDummy && 'ダミー'].filter(Boolean);
+      const tags = [
+        p.isHost && '👑 ホスト',
+        p.id === state.selfId && 'あなた',
+        p.isDummy && 'ダミー',
+        p.online === false && 'オフライン', // 在席は目安（切断の反映には時間がかかることがある）
+      ].filter(Boolean);
       return el('li', {}, [el('span', { text: p.name }), el('span', { className: 'tag', text: tags.join(' / ') })]);
     }),
   );
@@ -94,10 +99,13 @@ export const lobbyScreen = (() => {
         }
       });
 
-      root.querySelector('#lobby-add-dummy').addEventListener('click', () => gameService.addDummyPlayer());
+      const dummyButton = root.querySelector('#lobby-add-dummy');
+      dummyButton.hidden = gameService.mode !== 'local'; // ダミーは端末内モードだけ
+      dummyButton.addEventListener('click', () => gameService.addDummyPlayer());
 
       root.querySelector('#lobby-leave').addEventListener('click', async () => {
-        if (!confirm('ルームを解散してホームに戻りますか？')) return;
+        const { isHost } = gameService.getSession();
+        if (!confirm(isHost ? 'ルームを解散してホームに戻りますか？' : 'ルームから退出しますか？')) return;
         await gameService.leaveRoom();
         navigate('home');
       });
@@ -112,7 +120,20 @@ export const lobbyScreen = (() => {
       });
 
       // 参加者の変化（今はダミー、将来は Firebase）は gameService から通知される
-      cleanups.push(gameService.subscribe(() => renderPlayers(root, gameService.getSession())));
+      let leaving = false;
+      cleanups.push(gameService.subscribe(() => {
+        const session = gameService.getSession();
+        if (session.closed && !leaving) {
+          // ホストが退出して部屋が解散した
+          leaving = true;
+          toast('ホストが部屋を解散しました', 4000);
+          gameService.leaveRoom().finally(() => navigate('home'));
+          return;
+        }
+        if (!session.room) return;
+        renderRules(root.querySelector('#lobby-rules'), session.settings);
+        renderPlayers(root, session);
+      }));
       renderPlayers(root, state);
     },
 

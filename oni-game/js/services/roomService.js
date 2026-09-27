@@ -12,7 +12,7 @@
 //   leaveRoom()                -> Promise<void>
 
 import { createPlayer } from '../game/player.js';
-import { randomId, randomRoomCode } from '../utils/random.js';
+import { randomId, randomJoinCode } from '../utils/random.js';
 import { createDummyPlayer } from '../dev/dummyData.js';
 
 export class LocalRoomService {
@@ -25,14 +25,14 @@ export class LocalRoomService {
   async createRoom({ hostName }) {
     const selfId = randomId();
     const host = createPlayer({ id: selfId, name: hostName, isHost: true });
-    this.room = { code: randomRoomCode(), hostId: selfId };
+    this.room = { code: randomJoinCode(), hostId: selfId };
     this.players = [host];
     this.emit();
     return { room: this.room, selfId, players: this.players };
   }
 
   async joinRoom() {
-    throw new Error('ルーム参加はオンライン対応（Firebase導入）後に使えるようになります');
+    throw new Error('ルームへの参加はオンラインモード（Firebase）で使えます。端末内モードでは使えません');
   }
 
   async addDummyPlayer() {

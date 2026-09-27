@@ -16,7 +16,7 @@
 | 4 | ミッションシステム | ✅ 完了 |
 | 5 | ミッション結果による精度変更 | ✅ 完了 |
 | 6 | ゲーム終了・結果画面 | ✅ 完了 |
-| 7 | Firebase連携 | 7-A 設計レビュー・7-A2 準備（Firebase なし）完了。設計は [docs/step7-firebase-design.md](docs/step7-firebase-design.md) |
+| 7 | Firebase連携 | 7-A 設計・7-A2 準備・**7-B 部屋の作成/参加/メンバー/在席** 完了。7-C 以降（ゲーム進行のサーバー化）は未着手。設計は [docs/step7-firebase-design.md](docs/step7-firebase-design.md) |
 | 8 | 実機テスト・改善 | 未着手 |
 
 ## 動かし方
@@ -71,6 +71,41 @@ Google Maps JavaScript API のキーは、仕組み上ブラウザに送られ�
 
 位置情報は **HTTPS**（または localhost）でしか使えません。実機で確認するときは GitHub Pages などの HTTPS で公開するか、
 `npx cloudflared tunnel --url http://localhost:8000` のようなトンネルを使ってください。
+
+## オンライン（Firebase）で動かす（STEP 7-B 時点）
+
+STEP 7-B 時点でオンラインで動くのは、**部屋の作成・4桁コードでの参加・メンバーの同期・在席表示**だけです。
+ゲームの開始以降（7-C〜）はまだ端末内モードでしか遊べません。
+
+### ローカルのエミュレーターで試す（本番には接続しない）
+
+必要なもの: Node.js 22、Java 11 以上（RTDB エミュレーター用）
+
+```bash
+npm install                 # Firebase CLI・テスト用ライブラリ
+npm run functions:install   # Cloud Functions の依存
+npm run emulators           # Auth・RTDB・Functions のエミュレーターを起動（projectId: demo-oni-game）
+```
+
+別のターミナルで `npm start` し、ブラウザで http://localhost:8000/?backend=firebase を開きます。
+2つのブラウザ（片方はシークレットウィンドウ）で開くと、別々の匿名ユーザーとして部屋の作成・参加を試せます。
+
+- `demo-` で始まるプロジェクトIDは、Firebase の仕様でエミュレーター専用です（本番のサービスには接続されません）
+- `?dev` を付けると、常に端末内モード（ダミーの友達）で動きます
+
+### テスト
+
+```bash
+npm test               # ゲームロジックのテスト（エミュレーター不要）
+npm run test:emulator  # Security Rules・部屋の作成/参加・在席のテスト（エミュレーターを自動で起動・停止）
+```
+
+### 本番の Firebase を使うとき（まだ不要）
+
+- Firebase コンソールで作ったウェブアプリの設定を `oni-game/config/config.js`（Git 管理外）の `firebase.production` に書き、`firebase.mode` を `'production'` にする
+- プロジェクトIDは `firebase deploy --project <本番のID>` のように指定する（`.firebaserc` はエミュレーター用の `demo-oni-game` のまま）
+- Cloud Functions を使うには Blaze（従量課金）プランが必要。予算アラートを設定すること
+- ウェブの API キーは秘密鍵ではないが、アクセスの制御はすべて Authentication と Security Rules・Cloud Functions で行う（キーを隠すことを守りの前提にしない）
 
 ## 現在できること（STEP 1）
 
@@ -280,7 +315,7 @@ oni-game/
 │   ├── home.css / create.css / lobby.css / game.css / result.css   画面ごと
 │   └── map.css             地図上のマーカー・簡易マップ
 ├── js/
-│   ├── main.js             入口。画面を登録して起動
+│   ├── main.js             入口。バックエンド（端末内 / Firebase）を選んで画面を起動
 │   ├── core/               アプリの土台
 │   │   ├── router.js       画面遷移
 │   │   ├── store.js        購読できる状態管理
@@ -317,8 +352,16 @@ oni-game/
 │   ├── services/           画面とゲームの間の窓口（Firebase で差し替える層）
 │   │   ├── gameService.js  画面が使う唯一の窓口（読み取りと要求）
 │   │   ├── localGameService.js 端末内モードの実装
+│   │   ├── firebaseGameService.js Firebase 版の実装（7-B: 部屋・メンバー・在席）
 │   │   ├── roomService.js  ダミーのルーム（端末内モード）
 │   │   └── locationService.js 端末のGPS
+│   ├── firebase/           Firebase とのやりとり（画面からは直接使わない）
+│   │   ├── sdk.js          Firebase JS SDK の読み込み口（gstatic の公式 ESM）
+│   │   ├── firebaseConfig.js エミュレーター用 / 本番用の設定の解決（エミュレーターは demo- プロジェクトのみ）
+│   │   ├── firebaseApp.js  初期化・エミュレーターへの接続
+│   │   ├── auth.js         匿名ログイン
+│   │   ├── room.js         部屋の作成・参加・退出、メンバー・在席・公開設定の購読
+│   │   └── presence.js     在席（.info/connected と onDisconnect）
 │   ├── dev/                開発用（dummyData.js・dummySimulator.js・devPanel.js・devMode.js）
 │   └── utils/              汎用処理（distance.js / random.js / dom.js）
 └── assets/                 アイコン・画像

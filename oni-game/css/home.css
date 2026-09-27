@@ -3,7 +3,7 @@
 .home-hero h1 { font-size: 30px; font-weight: 800; }
 
 .home-join { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
-.home-join input { text-transform: uppercase; letter-spacing: 4px; }
+.home-join input { letter-spacing: 4px; }
 
 .howto summary { cursor: pointer; font-weight: 700; }
 .howto ol, .safety ul { margin-top: 8px; padding-left: 20px; font-size: 14px; color: var(--muted); }

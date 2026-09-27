@@ -2,3 +2,9 @@ node_modules/
 # 秘密情報（APIキー）を含む設定ファイルはコミットしない
 oni-game/config/config.js
 .env
+# Firebase
+functions/node_modules/
+functions/shared/
+.firebase/
+*-debug.log
+.runtimeconfig.json

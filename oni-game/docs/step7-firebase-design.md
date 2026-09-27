@@ -365,3 +365,57 @@ tests/rules/  tests/functions/
 - **画面**：`gameState.js`・`gameStore`・`roomService`・Firebase を使っていない
 
 残っている、端末内モード専用の部分: `dev/dummySimulator.js` は開発用のダミーを動かすためにストアを直接読む。Firebase 版には含めない。
+
+## 13. 7-B で実装したこと（部屋の作成・参加・メンバー・在席）
+
+### 構成
+
+| 部分 | 内容 |
+| --- | --- |
+| `firebase.json` / `.firebaserc` | RTDB・Functions・エミュレーター（Auth 9099 / RTDB 9000 / Functions 5001）。既定のプロジェクトはエミュレーター専用の `demo-oni-game` |
+| `database.rules.json` | 既定はすべて拒否。`/locations`・`/private`・`/joinCodes` は明示的に読み書きとも拒否 |
+| `functions/`（第2世代・`asia-northeast1`） | `createRoom` / `joinRoom` / `leaveRoom`（呼び出し型）。共通のゲームロジックは `npm run build` で `functions/shared` にコピー |
+| `oni-game/js/firebase/` | SDK の読み込み口・設定の解決・初期化・匿名ログイン・部屋・在席 |
+| `oni-game/js/services/firebaseGameService.js` | `gameService` の Firebase 版（7-B の範囲だけ。ゲーム進行は「まだ使えません」とエラー） |
+
+### データ構造（7-B 時点）
+
+```
+/joinCodes/{4桁}                  { roomId, createdAt }              サーバーのみ
+/rooms/{roomId}/meta              { hostUid, joinCode, phase, createdAt }  メンバーが読める・書けない
+/rooms/{roomId}/members/{uid}     { name, joinedAt }                 メンバーが読める・本人は name だけ変更可
+/rooms/{roomId}/presence/{uid}    { online, lastChanged }            メンバーが読める・本人だけ書ける
+/rooms/{roomId}/public            { settings }                       メンバーが読める・書けない
+/private/rateLimits/{uid}/{操作}   { windowStart, count }             サーバーのみ
+```
+
+- 内部の部屋IDは20文字のランダムな英数字で、4桁の参加コードとは別。コード → 部屋IDの対応は `/joinCodes` にあり、クライアントは読めない
+- 参加コードの発行は `/joinCodes/{code}` へのトランザクション（空いていれば確保）。同時に同じコードを作ろうとしても片方だけが成功し、もう片方は別のコードで再試行する
+- ホストは `meta.hostUid`（`createRoom` を呼んだ認証済みユーザー）。クライアントが送った `hostUid` や `isHost` は無視する。メンバー情報に役割やホストのフラグは保存しない
+- 4桁コードは1万通りしかないため、`joinRoom` は1ユーザー10分あたり20回まで（失敗も数える）。`createRoom` は10回まで
+- ホストが退出すると部屋は解散し、参加コードも解放される
+
+### 在席
+
+- `.info/connected` を監視し、接続したら `onDisconnect()` で「切断時にオフライン」を予約してからオンラインを書く
+- 表示用の目安。切断の検知には時間がかかるため、正確な現在の状態としては扱わない
+
+### テスト（`tests-emulator/`、`npm run test:emulator`）
+
+- `rules.test.js`（18件）: Security Rules の許可・拒否
+  - `assertFails` はエミュレーターが実際に `PERMISSION_DENIED` を返したときだけ成功する
+- `rooms.test.js`（9件）: `functions/src/rooms.js` のハンドラーを、ルール無効（Admin SDK 相当）の接続でエミュレーター上で実行
+- `roomClient.test.js`（3件）: `oni-game/js/firebase/room.js` を npm の Firebase JS SDK（modular）でエミュレーターに接続して実行（リアルタイム同期・onDisconnect・解散の通知）
+
+### この開発環境での制約（実施できなかった確認）
+
+開発に使ったサンドボックスでは、外部への通信がエージェントプロキシを通る。Firebase CLI（emulators:exec）と Firebase Admin SDK は、ローカル（127.0.0.1）宛ての通信にもこのプロキシを使ってしまい、ローカルのエミュレーターに接続できなかった。そのため次の2点は、この環境では実行していない。
+
+1. **呼び出し型関数の経路（Functions エミュレーター）と匿名ログイン（Auth エミュレーター）**
+   - ハンドラーの中身は上記のとおり RTDB エミュレーターで検証済み
+   - 実行していないのは、`onCall` の HTTP の経路と、トークンの受け渡しの部分
+2. **ブラウザからの実際の接続**
+   - Firebase JS SDK の配布元（www.gstatic.com）がこの環境では拒否されるため、ブラウザからの接続は確認できていない
+   - 確認できたのは、この場合に端末内モードへ切り替わり、その旨が通知されること
+
+通常の開発マシンでは `npm run test:emulator`（Auth・RTDB・Functions を起動）と `npm run emulators` ＋ ブラウザで確認できる。7-C に進む前に、手元での実行をお願いしたい。

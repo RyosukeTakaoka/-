@@ -45,6 +45,11 @@ export function randomId(length = 16) {
   return Array.from(bytes, (b) => chars[b % chars.length]).join('');
 }
 
+/** 4桁の数字の参加コード（表示・入力用。内部の部屋IDとは別） */
+export function randomJoinCode(rng = Math.random) {
+  return String(Math.floor(rng() * 10_000)).padStart(4, '0');
+}
+
 /** ルームコード（紛らわしい文字 0/O/1/I を除いた6文字） */
 export function randomRoomCode(rng = Math.random) {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';

@@ -22,7 +22,7 @@ const TEMPLATE = `
   <div class="home-join">
     <label class="field">
       <span>ルームコードで参加</span>
-      <input id="home-code" maxlength="6" autocapitalize="characters" placeholder="例: AB12CD" />
+      <input id="home-code" maxlength="4" inputmode="numeric" pattern="[0-9]*" placeholder="4桁の数字（例: 1234）" />
     </label>
     <button id="home-join" class="btn" type="button">参加する</button>
   </div>
@@ -80,7 +80,7 @@ export const homeScreen = {
       const name = readName(nameInput);
       if (!name) return;
       try {
-        await gameService.joinRoom({ code: codeInput.value.trim().toUpperCase(), name });
+        await gameService.joinRoom({ code: codeInput.value.trim(), name });
         navigate('lobby');
       } catch (err) {
         toast(err.message, 3500);

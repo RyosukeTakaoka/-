@@ -21,6 +21,7 @@ export function toSession(state) {
     exclusionZones: state.exclusionZones,
     players: state.players.map(({ id, name, isHost, isDummy }) => ({ id, name, isHost, isDummy })),
     hasResult: Boolean(state.resultSummary),
+    closed: false,
   };
 }
 

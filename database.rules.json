@@ -1,0 +1,64 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "joinCodes": {
+      ".read": false,
+      ".write": false
+    },
+    "private": {
+      ".read": false,
+      ".write": false
+    },
+    "locations": {
+      ".read": false,
+      ".write": false
+    },
+
+    "rooms": {
+      "$roomId": {
+        "meta": {
+          ".read": "auth != null && root.child('rooms').child($roomId).child('members').child(auth.uid).exists()"
+        },
+        "members": {
+          ".read": "auth != null && root.child('rooms').child($roomId).child('members').child(auth.uid).exists()",
+          "$uid": {
+            "name": {
+              ".write": "auth != null && auth.uid === $uid && data.exists() && newData.exists()",
+              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 12"
+            }
+          }
+        },
+        "presence": {
+          ".read": "auth != null && root.child('rooms').child($roomId).child('members').child(auth.uid).exists()",
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && root.child('rooms').child($roomId).child('members').child(auth.uid).exists()",
+            ".validate": "newData.hasChildren(['online', 'lastChanged'])",
+            "online": { ".validate": "newData.isBoolean()" },
+            "lastChanged": { ".validate": "newData.isNumber() && newData.val() <= now" },
+            "$other": { ".validate": false }
+          }
+        },
+        "public": {
+          ".read": "auth != null && root.child('rooms').child($roomId).child('members').child(auth.uid).exists()"
+        },
+        "views": {
+          "$uid": {
+            ".read": "auth != null && auth.uid === $uid && root.child('rooms').child($roomId).child('members').child(auth.uid).exists()"
+          }
+        },
+        "results": {
+          "public": {
+            ".read": "auth != null && root.child('rooms').child($roomId).child('members').child(auth.uid).exists()"
+          },
+          "personal": {
+            "$uid": {
+              ".read": "auth != null && auth.uid === $uid && root.child('rooms').child($roomId).child('members').child(auth.uid).exists()"
+            }
+          }
+        }
+      }
+    }
+  }
+}

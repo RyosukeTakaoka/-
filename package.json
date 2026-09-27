@@ -5,6 +5,15 @@
   "description": "リアル鬼ごっこ（鬼ごっこ＋ミッション＋情報戦）スマホ向けWebアプリ",
   "scripts": {
     "start": "python3 -m http.server 8000 --directory oni-game",
-    "test": "node --test \"tests/**/*.test.js\""
+    "test": "node --test \"tests/**/*.test.js\"",
+    "functions:install": "npm --prefix functions install",
+    "functions:build": "npm --prefix functions run build",
+    "test:emulator": "npm run functions:build && firebase emulators:exec --only auth,database,functions --project demo-oni-game \"node --test --test-concurrency=1 tests-emulator/*.test.js\"",
+    "emulators": "npm run functions:build && firebase emulators:start --only auth,database,functions --project demo-oni-game"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.2",
+    "firebase": "^12.19.0",
+    "firebase-tools": "^15.31.0"
   }
 }

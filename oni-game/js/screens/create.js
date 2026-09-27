@@ -7,6 +7,7 @@ import {
   DURATION_OPTIONS_MIN,
   RADIUS_OPTIONS_M,
   BLUR_OPTIONS_M,
+  CAPTURE_RADIUS_OPTIONS_M,
   MIN_HUNTERS,
   MAX_HUNTERS,
   settingsWarnings,
@@ -48,6 +49,18 @@ const TEMPLATE = `
       <output id="hunter-count">1</output>
       <button id="hunter-plus" class="btn-icon" type="button" aria-label="増やす">＋</button>
     </div>
+  </section>
+
+  <section class="card">
+    <h3>確保できる距離</h3>
+    <p class="hint">鬼がこの距離まで近づくと「確保」できます（GPSの誤差があるため10m以上がおすすめ）</p>
+    <div data-slot="capture"></div>
+  </section>
+
+  <section class="card">
+    <h3>増え鬼</h3>
+    <p class="hint">ON: 捕まった逃走者が鬼になる / OFF: 捕まった逃走者は脱落</p>
+    <div data-slot="zombie"></div>
   </section>
 
   <section class="card">
@@ -136,6 +149,25 @@ export const createScreen = (() => {
         }),
       );
 
+      root.querySelector('[data-slot=capture]').replaceWith(
+        createOptionGroup({
+          label: '確保できる距離',
+          options: CAPTURE_RADIUS_OPTIONS_M,
+          value: settings.captureRadiusM,
+          format: (v) => `${v}m`,
+          onChange: (v) => updateSettings({ captureRadiusM: v }),
+        }),
+      );
+      root.querySelector('[data-slot=zombie]').replaceWith(
+        createOptionGroup({
+          label: '増え鬼',
+          options: [false, true],
+          value: settings.zombieMode,
+          format: (v) => (v ? 'ON' : 'OFF'),
+          onChange: (v) => updateSettings({ zombieMode: v }),
+        }),
+      );
+
       const changeHunters = (delta) => {
         const next = Math.min(MAX_HUNTERS, Math.max(MIN_HUNTERS, gameStore.getState().settings.hunterCount + delta));
         updateSettings({ hunterCount: next });
@@ -171,10 +203,7 @@ export const createScreen = (() => {
           toast(err.message);
           return;
         }
-        const { room, selfId, players } = created;
-        // ダミー段階ではホストは開始地点にいるものとする
-        const withPosition = players.map((p) => (p.id === selfId ? { ...p, position: state.startPoint } : p));
-        enterLobby({ room, selfId, players: withPosition });
+        enterLobby(created);
         navigate('lobby');
       });
 

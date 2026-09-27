@@ -22,6 +22,7 @@
 .pin-start .pin-icon { background: #16a34a; }
 .pin-hunter .pin-icon { background: var(--hunter); }
 .pin-runner .pin-icon { background: var(--runner); }
+.pin-caught .pin-icon { background: #71717a; }
 .pin-self .pin-icon { outline: 3px solid #facc15; }
 
 /* 簡易マップ（APIキー未設定時） */

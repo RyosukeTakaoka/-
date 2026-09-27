@@ -46,3 +46,13 @@ export function formatDistance(meters) {
   }
   return `${Math.round(meters)}m`;
 }
+
+/** a から b への方位（度、北=0 時計回り） */
+export function bearingDeg(a, b) {
+  const φ1 = toRad(a.lat);
+  const φ2 = toRad(b.lat);
+  const Δλ = toRad(b.lng - a.lng);
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+  return (toDeg(Math.atan2(y, x)) + 360) % 360;
+}

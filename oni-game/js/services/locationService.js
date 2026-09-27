@@ -36,3 +36,20 @@ function geoErrorMessage(err) {
       return '位置情報エラー';
   }
 }
+
+/**
+ * 位置を監視し続ける。onPosition({ lat, lng, accuracyM }) / onError(Error)
+ * @returns {() => void} 監視を止める関数（ゲーム終了時に必ず呼ぶ）
+ */
+export function watchPosition(onPosition, onError) {
+  if (!isGeolocationAvailable()) {
+    onError?.(new Error('位置情報が使えません（HTTPS または localhost で開いてください）'));
+    return () => {};
+  }
+  const id = navigator.geolocation.watchPosition(
+    (pos) => onPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracyM: pos.coords.accuracy }),
+    (err) => onError?.(new Error(geoErrorMessage(err))),
+    GEO_OPTIONS,
+  );
+  return () => navigator.geolocation.clearWatch(id);
+}

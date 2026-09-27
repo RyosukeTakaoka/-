@@ -18,9 +18,16 @@ export function createDummyPlayer(index) {
   });
 }
 
-/** 位置のないプレイヤーに、エリア内のダミー位置を割り当てる */
-export function placePlayersInArea(players, area, rng = Math.random) {
-  return players.map((p) =>
-    p.position ? p : { ...p, position: randomPointInArea(area, rng, { marginM: area.radiusM * 0.1 }) },
-  );
+/**
+ * ゲーム開始時の実位置（ダミー段階用）。
+ * ダミーはエリア内のランダムな地点、それ以外は selfPosition（なければ開始地点）に置く。
+ */
+export function createInitialPositions(players, area, { selfPosition = null, rng = Math.random } = {}) {
+  const positions = {};
+  for (const p of players) {
+    positions[p.id] = p.isDummy
+      ? randomPointInArea(area, rng, { marginM: area.radiusM * 0.1 })
+      : (selfPosition ?? area.center);
+  }
+  return positions;
 }

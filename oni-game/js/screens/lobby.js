@@ -3,7 +3,7 @@
 import { el, fromHtml, toast } from '../utils/dom.js';
 import { formatDistance } from '../utils/distance.js';
 import { gameStore, setPlayers, startGame, resetGame } from '../game/gameState.js';
-import { placePlayersInArea } from '../dev/dummyData.js';
+import { createInitialPositions } from '../dev/dummyData.js';
 import { roomService } from '../services/roomService.js';
 
 const TEMPLATE = `
@@ -41,6 +41,8 @@ function renderRules(dl, settings) {
     ['エリア半径', formatDistance(settings.radiusM)],
     ['初期ぼかし', formatDistance(settings.initialBlurM)],
     ['鬼の人数', `${settings.hunterCount}人`],
+    ['確保距離', `${settings.captureRadiusM}m`],
+    ['増え鬼', settings.zombieMode ? 'ON（捕まると鬼になる）' : 'OFF（捕まると脱落）'],
   ];
   dl.replaceChildren(...rows.flatMap(([k, v]) => [el('dt', { text: k }), el('dd', { text: v })]));
 }
@@ -102,10 +104,9 @@ export const lobbyScreen = (() => {
 
       root.querySelector('#lobby-start').addEventListener('click', () => {
         const s = gameStore.getState();
-        // ダミー段階: 位置のない参加者をエリア内に仮配置する
-        setPlayers(placePlayersInArea(s.players, s.area));
         try {
-          startGame();
+          // ダミー段階: ダミーはエリア内に仮配置、自分は GPS が届くまで開始地点にいるものとする
+          startGame({ initialPositions: createInitialPositions(s.players, s.area) });
           navigate('game');
         } catch (err) {
           toast(err.message);
@@ -114,10 +115,7 @@ export const lobbyScreen = (() => {
 
       // ルームの参加者の変化（今はダミー、将来は Firebase）をゲーム状態に反映
       cleanups.push(
-        roomService.onPlayersChanged((players) => {
-          const known = new Map(gameStore.getState().players.map((p) => [p.id, p]));
-          setPlayers(players.map((p) => ({ ...p, position: known.get(p.id)?.position ?? p.position })));
-        }),
+        roomService.onPlayersChanged((players) => setPlayers(players)),
       );
       cleanups.push(gameStore.subscribe((s) => renderPlayers(root, s)));
       renderPlayers(root, state);

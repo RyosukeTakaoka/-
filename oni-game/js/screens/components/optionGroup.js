@@ -3,7 +3,7 @@
 import { el } from '../../utils/dom.js';
 
 /**
- * @param {{ options: number[], value: number, format: (v:number)=>string, onChange: (v:number)=>void, label: string }} props
+ * @param {{ options: any[], value: any, format: (v:any)=>string, onChange: (v:any)=>void, label: string }} props
  */
 export function createOptionGroup({ options, value, format, onChange, label }) {
   const group = el('div', { className: 'option-group', attrs: { role: 'radiogroup', 'aria-label': label } });

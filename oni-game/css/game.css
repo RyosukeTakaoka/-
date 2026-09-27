@@ -26,18 +26,6 @@
 .hud-timer.danger { color: #f87171; }
 .hud-counts { font-size: 12px; color: var(--muted); text-align: right; }
 
-.dev-banner {
-  position: absolute;
-  top: calc(60px + env(safe-area-inset-top));
-  left: 12px; right: 12px;
-  padding: 6px 10px;
-  font-size: 12px;
-  color: #fde68a;
-  background: rgba(120, 53, 15, 0.85);
-  border-radius: 8px;
-  z-index: 10;
-}
-
 .game-actions {
   position: absolute;
   left: 0; right: 0; bottom: 0;
@@ -50,4 +38,69 @@
 
 /* 下部ボタンと地図の操作ボタンが重ならないように */
 .game .fallback-zoom,
-.game .fallback-notice { bottom: calc(72px + env(safe-area-inset-bottom)); }
+.game .fallback-notice { bottom: calc(144px + env(safe-area-inset-bottom)); }
+
+.role-badge.caught { background: #52525b; }
+
+.game-banners {
+  position: absolute;
+  top: calc(60px + env(safe-area-inset-top));
+  left: 12px; right: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 10;
+  pointer-events: none;
+}
+.banner {
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  background: rgba(38, 38, 46, 0.92);
+  border-radius: 10px;
+}
+.banner-warn { background: #b45309; animation: blink 1s infinite; }
+@keyframes blink { 50% { opacity: 0.65; } }
+
+.btn-capture {
+  position: absolute;
+  left: 12px; right: 12px;
+  width: auto;
+  bottom: calc(64px + env(safe-area-inset-bottom));
+  padding: 18px;
+  font-size: 22px;
+  z-index: 10;
+}
+
+.finish-panel {
+  position: absolute;
+  left: 16px; right: 16px;
+  top: 30%;
+  padding: 20px;
+  text-align: center;
+  background: rgba(28, 28, 34, 0.97);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.finish-title { font-size: 26px; font-weight: 800; }
+.finish-self { font-weight: 700; margin-bottom: 8px; }
+
+.dev-panel {
+  position: absolute;
+  left: 12px;
+  bottom: calc(176px + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  font-size: 12px;
+  color: #fde68a;
+  background: rgba(120, 53, 15, 0.9);
+  border-radius: 10px;
+  z-index: 15;
+}
+.dev-panel select { font-size: 13px; background: #1c1c22; border: 1px solid var(--line); border-radius: 6px; padding: 4px; }

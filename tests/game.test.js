@@ -72,7 +72,7 @@ test('gameState: 設定→開始地点→ロビー→開始', () => {
   enterLobby({ room: { code: 'ABCDEF', hostId: 'h' }, selfId: 'h', players });
   assert.equal(gameStore.getState().phase, PHASE.LOBBY);
 
-  startGame(1_000, createSeededRng(2));
+  startGame({ now: 1_000, rng: createSeededRng(2) });
   const s = gameStore.getState();
   assert.equal(s.phase, PHASE.PLAYING);
   assert.equal(s.endsAt, 1_000 + 20 * 60_000);

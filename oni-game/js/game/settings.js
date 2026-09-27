@@ -4,6 +4,7 @@ export const DURATION_OPTIONS_MIN = [5, 10, 20, 30, 60];
 export const RADIUS_OPTIONS_M = [100, 300, 500, 1000, 3000, 5000];
 export const BLUR_OPTIONS_M = [50, 100, 300, 500, 1000];
 export const CAPTURE_RADIUS_OPTIONS_M = [5, 10, 20, 30];
+export const REVEAL_INTERVAL_OPTIONS_SEC = [30, 60, 120, 180, 300];
 export const MIN_HUNTERS = 1;
 export const MAX_HUNTERS = 10;
 
@@ -14,6 +15,8 @@ export const DEFAULT_SETTINGS = Object.freeze({
   hunterCount: 1, // 鬼の人数
   captureRadiusM: 10, // 鬼が逃走者を確保できる距離（m）
   zombieMode: false, // 増え鬼: ON なら捕まった逃走者が鬼になる / OFF なら脱落
+  revealIntervalSec: 60, // 逃走者の可能性エリアが更新・公開される間隔（秒）
+  showHuntersToRunners: true, // 鬼の位置を逃走者（と脱落者）に見せるか
 });
 
 const pick = (value, options, fallback) => (options.includes(Number(value)) ? Number(value) : fallback);
@@ -34,6 +37,13 @@ export function sanitizeSettings(input = {}, current = DEFAULT_SETTINGS) {
       current.captureRadiusM,
     ),
     zombieMode: typeof input.zombieMode === 'boolean' ? input.zombieMode : current.zombieMode,
+    revealIntervalSec: pick(
+      input.revealIntervalSec ?? current.revealIntervalSec,
+      REVEAL_INTERVAL_OPTIONS_SEC,
+      current.revealIntervalSec,
+    ),
+    showHuntersToRunners:
+      typeof input.showHuntersToRunners === 'boolean' ? input.showHuntersToRunners : current.showHuntersToRunners,
   };
 }
 

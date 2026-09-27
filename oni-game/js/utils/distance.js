@@ -56,3 +56,25 @@ export function bearingDeg(a, b) {
   const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
   return (toDeg(Math.atan2(y, x)) + 360) % 360;
 }
+
+// ---- 平面近似（ゲームエリア程度の範囲で使う） ----
+const M_PER_DEG_LAT = 110574;
+const M_PER_DEG_LNG_AT_EQUATOR = 111320;
+
+/** origin を原点とした平面座標（東 = x, 北 = y、メートル） */
+export function toLocalXY(origin, p) {
+  const cosLat = Math.cos(toRad(origin.lat));
+  return {
+    x: (p.lng - origin.lng) * cosLat * M_PER_DEG_LNG_AT_EQUATOR,
+    y: (p.lat - origin.lat) * M_PER_DEG_LAT,
+  };
+}
+
+/** toLocalXY の逆変換 */
+export function fromLocalXY(origin, { x, y }) {
+  const cosLat = Math.cos(toRad(origin.lat));
+  return {
+    lat: origin.lat + y / M_PER_DEG_LAT,
+    lng: origin.lng + x / (cosLat * M_PER_DEG_LNG_AT_EQUATOR),
+  };
+}

@@ -7,6 +7,8 @@ export const CIRCLE_STYLE = Object.freeze({
   area: { stroke: '#ef4444', fill: '#ef4444', fillOpacity: 0.06, strokeWidth: 3 },
   preview: { stroke: '#f59e0b', fill: '#f59e0b', fillOpacity: 0.08, strokeWidth: 2 },
   capture: { stroke: '#fca5a5', fill: '#ef4444', fillOpacity: 0.15, strokeWidth: 1 },
+  possibleArea: { stroke: '#a855f7', fill: '#a855f7', fillOpacity: 0.18, strokeWidth: 2 }, // 鬼から見た逃走者
+  ownPossibleArea: { stroke: '#60a5fa', fill: '#60a5fa', fillOpacity: 0.08, strokeWidth: 1 }, // 自分が鬼にどう見えているか
 });
 
 function pin(className, emoji, label) {
@@ -31,6 +33,14 @@ export function addStartMarker(board, position) {
 
 export function addAreaCircle(board, area, style = CIRCLE_STYLE.area) {
   return board.addCircle({ center: area.center, radiusM: area.radiusM, style });
+}
+
+/**
+ * 可能性エリアのラベル（❓）。円の中心に置くと「中心にいる」と誤解されるため、円の北端に置く。
+ */
+export function addPossibleAreaLabel(board, position, text) {
+  const element = pin('pin-possible', '❓', text);
+  return board.addMarker({ position, element, title: text });
 }
 
 /** プレイヤーの見た目のキー（役割や状態が変わったらマーカーを作り直すため） */

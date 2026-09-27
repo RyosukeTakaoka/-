@@ -9,7 +9,10 @@ export const HUD_TEMPLATE = `
 <header class="hud">
   <div id="hud-role" class="role-badge"></div>
   <div id="hud-timer" class="hud-timer">--:--</div>
-  <div id="hud-counts" class="hud-counts"></div>
+  <div class="hud-counts">
+    <span id="hud-counts"></span>
+    <span id="hud-reveal"></span>
+  </div>
 </header>
 <div class="game-banners">
   <p id="banner-area" class="banner banner-warn" hidden>⚠ ゲームエリアの外にいます。エリア内に戻ってください</p>
@@ -36,6 +39,8 @@ export function renderClock(root, view, now = Date.now()) {
   const left = view.phase === 'playing' ? remainingMs(view.endsAt, now) : 0;
   timer.textContent = formatClock(left);
   timer.classList.toggle('danger', view.phase === 'playing' && left < 60_000);
+  root.querySelector('#hud-reveal').textContent =
+    view.nextRevealAt != null ? `位置公開まで ${formatClock(Math.max(0, view.nextRevealAt - now))}` : '';
 
   const button = root.querySelector('#btn-capture');
   const waitMs = (view.self?.captureReadyAt ?? 0) - now;
@@ -58,6 +63,9 @@ export function renderHud(root, view) {
   if (playing && self?.status === STATUS.CAUGHT) {
     status.hidden = false;
     status.textContent = '確保されました。観戦中です（逃走者の位置は表示されません）';
+  } else if (playing && self?.role === ROLE.RUNNER && self.status === STATUS.ACTIVE && self.blurM) {
+    status.hidden = false;
+    status.textContent = `鬼にはあなたの位置が半径${self.blurM}mの円（青い円）で見えています`;
   } else if (playing && self?.originalRole === ROLE.RUNNER && self.role === ROLE.HUNTER) {
     status.hidden = false;
     status.textContent = '確保されて鬼になりました。逃走者を捕まえよう！';

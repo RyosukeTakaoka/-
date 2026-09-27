@@ -52,3 +52,26 @@ export function randomRoomCode(rng = Math.random) {
   for (let i = 0; i < 6; i++) code += chars[Math.floor(rng() * chars.length)];
   return code;
 }
+
+/** 暗号学的に安全な 32bit 整数（秘密の値の生成用） */
+export function secureUint32() {
+  const a = new Uint32Array(1);
+  globalThis.crypto.getRandomValues(a);
+  return a[0];
+}
+
+/** 暗号学的に安全な 0以上1未満の数（rng と同じ形で使える） */
+export function secureRandom() {
+  return secureUint32() / 4294967296;
+}
+
+/** 複数の値から 32bit のシードを作る（FNV-1a）。同じ入力なら同じ値 */
+export function hashToSeed(...parts) {
+  let h = 0x811c9dc5;
+  const text = parts.join('|');
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h >>> 0;
+}

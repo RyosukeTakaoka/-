@@ -50,7 +50,12 @@ export const gameScreen = (() => {
     for (const entry of v.log) {
       if (entry.id <= lastLogId) continue;
       lastLogId = entry.id;
-      if (entry.type === 'capture' && entry.playerId === viewerId) {
+      if (entry.type === 'reveal') {
+        const self = gameStore.getState().players.find((p) => p.id === viewerId);
+        if (self?.status !== 'active') continue;
+        toast(self.role === 'hunter' ? '🔔 逃走者の可能性エリアが更新された' : '⚠ あなたの可能性エリアが鬼に公開された');
+        navigator.vibrate?.([80, 60, 80]);
+      } else if (entry.type === 'capture' && entry.playerId === viewerId) {
         toast('あなたは確保された…', 3500);
         navigator.vibrate?.([400, 150, 400]);
       } else {

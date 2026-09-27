@@ -40,6 +40,8 @@ function renderRules(dl, settings) {
     ['ゲーム時間', `${settings.durationMin}分`],
     ['エリア半径', formatDistance(settings.radiusM)],
     ['初期ぼかし', formatDistance(settings.initialBlurM)],
+    ['位置の公開間隔', settings.revealIntervalSec < 60 ? `${settings.revealIntervalSec}秒` : `${settings.revealIntervalSec / 60}分`],
+    ['鬼の位置', settings.showHuntersToRunners ? '逃走者に見せる' : '逃走者に見せない'],
     ['鬼の人数', `${settings.hunterCount}人`],
     ['確保距離', `${settings.captureRadiusM}m`],
     ['増え鬼', settings.zombieMode ? 'ON（捕まると鬼になる）' : 'OFF（捕まると脱落）'],

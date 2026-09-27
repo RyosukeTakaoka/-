@@ -1,10 +1,12 @@
 // ダミープレイヤーの動きをまねるシミュレーター（Firebase 導入前の動作確認用）
 // 他の端末の代わりに、ダミーの位置を更新し、ダミーの鬼に確保操作をさせる。
 // 実際の端末の代わりなので、ゲーム側と同じアクション（updatePosition / requestCapture）だけを使う。
+// ダミーの鬼が追いかける先も、本物の鬼と同じく自分のビュー（逃走者の可能性エリア）だけから決める。
 
 import { destinationPoint, distanceM, bearingDeg } from '../utils/distance.js';
-import { gameStore, updatePosition, requestCapture, PHASE } from '../game/gameState.js';
-import { ROLE, STATUS, activeRunners } from '../game/player.js';
+import { gameStore, updatePosition, requestCapture, getPlayerView, PHASE } from '../game/gameState.js';
+import { ROLE, STATUS } from '../game/player.js';
+import { DISPLAY } from '../game/visibility.js';
 
 const HUNTER_SPEED_MPS = 3; // 鬼の速さ（小走り）
 const RUNNER_SPEED_MPS = 2; // 逃走者の速さ
@@ -30,7 +32,7 @@ export function startDummySimulator({ getControlledId, intervalMs = 1000, rng = 
       const pos = s.positions[p.id];
       let heading;
       if (p.role === ROLE.HUNTER) {
-        heading = chaseHeading(s, pos) ?? wander(p.id, pos, s.area);
+        heading = chaseHeading(p.id, pos, now) ?? wander(p.id, pos, s.area);
       } else {
         heading = wander(p.id, pos, s.area);
       }
@@ -43,16 +45,16 @@ export function startDummySimulator({ getControlledId, intervalMs = 1000, rng = 
     }
   }
 
-  // 一番近い逃走者の方へ向かう
-  function chaseHeading(s, pos) {
+  // 一番近い可能性エリアの方へ向かう（エリアの中に入ったら、その中を探し回る）
+  function chaseHeading(hunterId, pos, now) {
     let best = null;
-    for (const r of activeRunners(s.players)) {
-      const rp = s.positions[r.id];
-      if (!rp) continue;
-      const d = distanceM(pos, rp);
-      if (!best || d < best.d) best = { d, rp };
+    for (const other of getPlayerView(hunterId, now).others) {
+      if (other.display.kind !== DISPLAY.AREA) continue;
+      const d = distanceM(pos, other.display.center);
+      if (!best || d < best.d) best = { d, area: other.display };
     }
-    return best ? bearingDeg(pos, best.rp) : null;
+    if (!best || best.d < best.area.radiusM * 0.5) return null;
+    return bearingDeg(pos, best.area.center);
   }
 
   // ふらふら歩く。エリアの端に近づいたら中心へ戻る

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { buildPlayerView, DISPLAY } from '../oni-game/js/game/visibility.js';
 import { ROLE, STATUS } from '../oni-game/js/game/player.js';
 import { destinationPoint } from '../oni-game/js/utils/distance.js';
-import { playingState, CENTER } from './helpers.js';
+import { playingState, publishedState, CENTER } from './helpers.js';
 
 const setup = () =>
   playingState([
@@ -15,7 +15,7 @@ const setup = () =>
 
 const findOther = (view, id) => view.others.find((p) => p.id === id);
 
-test('鬼のビューには逃走者の実座標がどこにも含まれない', () => {
+test('可能性エリアの公開前は、鬼には逃走者が表示されない', () => {
   const s = setup();
   // 逃走者を鬼と別の方向に置く（経度が鬼と同じだと検査にならないため）
   s.positions.r = { ...destinationPoint(CENTER, 120, 60), accuracyM: 5, updatedAt: 0 };

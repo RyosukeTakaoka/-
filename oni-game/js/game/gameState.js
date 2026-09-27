@@ -12,6 +12,7 @@ import { preparePlayersForGame, ROLE } from './player.js';
 import { attemptCapture, CAPTURE_FAILURE } from './capture.js';
 import { judgeOutcome, FINISH_REASON } from './outcome.js';
 import { buildPlayerView } from './visibility.js';
+import { emptyPrivacy, initPrivacy, publishIfDue, publishMissing, withdraw } from './locationPublisher.js';
 
 export const PHASE = Object.freeze({
   SETUP: 'setup', // ゲーム作成・設定中
@@ -32,6 +33,7 @@ export function initialState() {
     selfId: null, // この端末のプレイヤーID
     players: [],
     positions: {}, // 実位置 { [playerId]: { lat, lng, accuracyM, updatedAt } }（ゲーム中のみ）
+    privacy: emptyPrivacy(), // 可能性エリアの内部状態（秘密の値・公開済みエリア）。ビューには published だけが出る
     captureAttempts: {}, // { [hunterId]: 最後に確保操作した時刻 }
     startedAt: null,
     endsAt: null,
@@ -79,7 +81,7 @@ export function setPlayers(players) {
  * ゲーム開始。役割をランダムに決め、開始時刻と終了時刻を記録する。
  * initialPositions: 開始時点で分かっている実位置（ダミー配置など）
  */
-export function startGame({ now = Date.now(), rng = Math.random, initialPositions = {} } = {}) {
+export function startGame({ now = Date.now(), rng = Math.random, privacyRng, initialPositions = {} } = {}) {
   const s = gameStore.getState();
   if (s.phase !== PHASE.LOBBY) throw new Error('ロビーからのみ開始できます');
   if (!s.area) throw new Error('ゲーム開始地点が設定されていません');
@@ -93,6 +95,7 @@ export function startGame({ now = Date.now(), rng = Math.random, initialPosition
     phase: PHASE.PLAYING,
     players,
     positions,
+    privacy: initPrivacy(players, privacyRng),
     captureAttempts: {},
     startedAt: now,
     endsAt: now + s.settings.durationMin * 60 * 1000,
@@ -100,6 +103,7 @@ export function startGame({ now = Date.now(), rng = Math.random, initialPosition
     log: [],
   });
   addLog(now, 'start', `ゲーム開始！ 鬼は ${hunterNames.join('、')}`);
+  gameStore.setState((st) => ({ privacy: publishIfDue(st, now).privacy })); // 最初の公開
 }
 
 /** 実位置の更新（GPS・ダミー）。ゲーム中以外は保持しない */
@@ -113,6 +117,12 @@ export function updatePosition(playerId, pos, now = Date.now()) {
       [playerId]: { lat: pos.lat, lng: pos.lng, accuracyM: pos.accuracyM ?? null, updatedAt: now },
     },
   });
+  // 公開済みの可能性エリアは変えない。まだ一度も公開されていない逃走者だけ公開する
+  const next = gameStore.getState();
+  if (!next.privacy.published[playerId]) {
+    const privacy = publishMissing(next, now);
+    if (privacy !== next.privacy) gameStore.setState({ privacy });
+  }
 }
 
 /**
@@ -129,7 +139,7 @@ export function requestCapture(hunterId, now = Date.now()) {
   }
   if (!result.ok) return { ok: false, reason: result.reason };
 
-  gameStore.setState({ players: result.players });
+  gameStore.setState({ players: result.players, privacy: withdraw(s.privacy, result.capturedId) });
   const hunter = result.players.find((p) => p.id === hunterId);
   const caught = result.players.find((p) => p.id === result.capturedId);
   const suffix = s.settings.zombieMode ? `${caught.name} は鬼になった！` : `${caught.name} は脱落`;
@@ -138,9 +148,17 @@ export function requestCapture(hunterId, now = Date.now()) {
   return { ok: true, capturedId: result.capturedId };
 }
 
-/** 定期的に呼ぶ（時間切れの判定） */
+/** 定期的に呼ぶ（時間切れの判定・可能性エリアの公開） */
 export function tickGame(now = Date.now()) {
-  if (gameStore.getState().phase === PHASE.PLAYING) checkOutcome(now);
+  if (gameStore.getState().phase !== PHASE.PLAYING) return;
+  checkOutcome(now);
+  const s = gameStore.getState();
+  if (s.phase !== PHASE.PLAYING) return;
+  const { privacy, revealed } = publishIfDue(s, now);
+  if (revealed) {
+    gameStore.setState({ privacy });
+    addLog(now, 'reveal', '逃走者の可能性エリアが更新されました');
+  }
 }
 
 /** ホストによる途中終了 */
@@ -161,6 +179,7 @@ function finish({ winner, reason }, now) {
     endsAt: Math.min(s.endsAt, now),
     result: { winner, reason, finishedAt: now },
     positions: {}, // 終了したら実位置は保持しない
+    privacy: emptyPrivacy(), // 秘密の値・公開済みエリアも消す
     captureAttempts: {},
   });
   const text = {

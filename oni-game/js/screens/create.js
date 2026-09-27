@@ -8,6 +8,7 @@ import {
   RADIUS_OPTIONS_M,
   BLUR_OPTIONS_M,
   CAPTURE_RADIUS_OPTIONS_M,
+  REVEAL_INTERVAL_OPTIONS_SEC,
   MIN_HUNTERS,
   MAX_HUNTERS,
   settingsWarnings,
@@ -40,6 +41,17 @@ const TEMPLATE = `
     <h3>初期の位置情報ぼかし</h3>
     <p class="hint">鬼に見える「逃走者がいるかもしれない円」の大きさ</p>
     <div data-slot="blur"></div>
+  </section>
+
+  <section class="card">
+    <h3>位置の公開間隔</h3>
+    <p class="hint">この間隔ごとに、鬼に見える可能性エリアが更新されます。間隔中は同じ円のままです</p>
+    <div data-slot="reveal"></div>
+  </section>
+
+  <section class="card">
+    <h3>鬼の位置を逃走者に見せる</h3>
+    <div data-slot="show-hunters"></div>
   </section>
 
   <section class="card">
@@ -149,6 +161,24 @@ export const createScreen = (() => {
         }),
       );
 
+      root.querySelector('[data-slot=reveal]').replaceWith(
+        createOptionGroup({
+          label: '位置の公開間隔',
+          options: REVEAL_INTERVAL_OPTIONS_SEC,
+          value: settings.revealIntervalSec,
+          format: (v) => (v < 60 ? `${v}秒` : `${v / 60}分`),
+          onChange: (v) => updateSettings({ revealIntervalSec: v }),
+        }),
+      );
+      root.querySelector('[data-slot=show-hunters]').replaceWith(
+        createOptionGroup({
+          label: '鬼の位置を逃走者に見せる',
+          options: [true, false],
+          value: settings.showHuntersToRunners,
+          format: (v) => (v ? '見せる' : '見せない'),
+          onChange: (v) => updateSettings({ showHuntersToRunners: v }),
+        }),
+      );
       root.querySelector('[data-slot=capture]').replaceWith(
         createOptionGroup({
           label: '確保できる距離',

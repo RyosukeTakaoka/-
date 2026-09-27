@@ -87,8 +87,16 @@ open ios/OniGame.xcodeproj
 `git pull` したとき Xcode を開いたままなら、Xcode が自動で読み込み直します。
 
 初回は Xcode が Firebase のライブラリ（Swift Package）をダウンロードします（数分かかります）。
-実機で動かすときは、Xcode の「Signing & Capabilities」で自分のチーム（Apple ID）を選び、
-Bundle Identifier を自分のもの（例: `com.あなたの名前.onigame`）に変えてください。
+実機で動かす・App Store に出すときは、**Team を `ios/Config/Local.xcconfig` に書きます**（最初の1回だけ）。
+
+```bash
+cp ios/Config/Local.xcconfig.example ios/Config/Local.xcconfig
+# Local.xcconfig を開き、DEVELOPMENT_TEAM = の後ろを自分の Team ID（10文字）にする
+```
+
+- `Local.xcconfig` は Git 管理外なので、`git pull` や `xcodegen generate` をしても Team は変わりません
+- Bundle Identifier の既定値（`com.takaoka.app.onigame`）は `ios/Config/Signing.xcconfig` にあります
+- Xcode の「Signing & Capabilities」画面で Team を選ばないでください（共有の `project.pbxproj` が書き換わり、`git pull` でぶつかります）
 
 ### 2-A. 1台で試す（端末内モード・開発用）
 

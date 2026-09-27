@@ -21,6 +21,7 @@
 		5F07D4E7007EA0F79A36070E /* BoardMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC661C5A06E66A2F9DF52AF /* BoardMap.swift */; };
 		71D4A9D39778D4D52D3B6CC7 /* ResultScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41B6FA0357588128460CF82B /* ResultScreen.swift */; };
 		7A1C0109C062319D38D578C8 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C7B540380692127835E108D /* RootView.swift */; };
+		7BE72133F67931A660589FFA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 83B827F6BBE55FF66BC93E82 /* Assets.xcassets */; };
 		8D4CB2226AC11C8C2E6F1E82 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 4871868EB63FCA2EDDFED214 /* FirebaseAuth */; };
 		AF7119202259D783A6EF7245 /* LobbyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF97589256029DF106FF5E64 /* LobbyView.swift */; };
 		B6F7BC90D80613AE14E95DE5 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CFE7741BEEEACB1D43A24D5 /* LocationService.swift */; };
@@ -40,12 +41,14 @@
 		144CA78F49F180F94B608455 /* LocalGameService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalGameService.swift; sourceTree = "<group>"; };
 		155ABB59A654ED3B37710122 /* MapLayers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapLayers.swift; sourceTree = "<group>"; };
 		166C5BD7C67EE31AC54AD93C /* GameService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameService.swift; sourceTree = "<group>"; };
+		29095CCB42249742432FC5DE /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 		3CFE7741BEEEACB1D43A24D5 /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
 		41B6FA0357588128460CF82B /* ResultScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultScreen.swift; sourceTree = "<group>"; };
 		54B7EEE9E844A586E9941810 /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
 		5C7B540380692127835E108D /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		5CB229761120BC8AD1A33BD8 /* GameScreenModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScreenModel.swift; sourceTree = "<group>"; };
 		7A9C288271591B5FE8C523F8 /* OniGameCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = OniGameCore; path = OniGameCore; sourceTree = SOURCE_ROOT; };
+		83B827F6BBE55FF66BC93E82 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		86B07E571452082FF493754B /* OniGameApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OniGameApp.swift; sourceTree = "<group>"; };
 		8E91F3DC739E49E7BD78B5F7 /* OniGame.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = OniGame.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9AA8F11675BFD4D545324435 /* CreateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateView.swift; sourceTree = "<group>"; };
@@ -129,9 +132,18 @@
 			path = Components;
 			sourceTree = "<group>";
 		};
+		BE3400DE933D6612691EE666 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				29095CCB42249742432FC5DE /* Signing.xcconfig */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
 		BF78D704E132C644C428D756 /* OniGame */ = {
 			isa = PBXGroup;
 			children = (
+				83B827F6BBE55FF66BC93E82 /* Assets.xcassets */,
 				C977FD69C8D95DD01086BF53 /* Info.plist */,
 				2E57F61C6A02EEF28481DAE1 /* App */,
 				A189EF547D6729105E86E81E /* Map */,
@@ -144,6 +156,7 @@
 		CDA0931909459C612D4CDAC8 = {
 			isa = PBXGroup;
 			children = (
+				BE3400DE933D6612691EE666 /* Config */,
 				BF78D704E132C644C428D756 /* OniGame */,
 				63C752FC49D18462A18347AB /* Packages */,
 				18AD565E496062BC130AE4C9 /* Products */,
@@ -169,6 +182,7 @@
 			buildConfigurationList = FA37453A499E00B2FD556093 /* Build configuration list for PBXNativeTarget "OniGame" */;
 			buildPhases = (
 				90DF0975E51A9C73F4333D8F /* Sources */,
+				03E73C38C29A5A28A0742D72 /* Resources */,
 				CC54444BF6AFCEF97E83ABEA /* Frameworks */,
 			);
 			buildRules = (
@@ -194,6 +208,12 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 2600;
+				TargetAttributes = {
+					90B8CE3FCC39FAE9D4B15BF6 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
 			};
 			buildConfigurationList = 16F0C061C6919F6FEED10A3B /* Build configuration list for PBXProject "OniGame" */;
 			compatibilityVersion = "Xcode 14.0";
@@ -217,6 +237,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		03E73C38C29A5A28A0742D72 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7BE72133F67931A660589FFA /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		90DF0975E51A9C73F4333D8F /* Sources */ = {
@@ -372,6 +403,7 @@
 		};
 		ADD52F0ED3A7A905117A8F12 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 29095CCB42249742432FC5DE /* Signing.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -381,7 +413,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.onigame;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -389,6 +420,7 @@
 		};
 		D02B1E433F35E64D4AD88C42 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 29095CCB42249742432FC5DE /* Signing.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -398,7 +430,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.onigame;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 1;
 			};

@@ -14,3 +14,4 @@ ios/**/.swiftpm/
 ios/*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
 ios/**/xcuserdata/
 ios/OniGame/GoogleService-Info.plist
+ios/Config/Local.xcconfig

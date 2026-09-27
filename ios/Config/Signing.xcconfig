@@ -1,0 +1,15 @@
+// 署名（Team・Bundle Identifier）の設定
+//
+// このファイルは GitHub で共有する「既定値」。自分の Team などは、ここではなく
+// 同じフォルダの Local.xcconfig（Git 管理外）に書く。Local.xcconfig の値がこのファイルの値より優先される。
+// Local.xcconfig は Local.xcconfig.example をコピーして作る。
+//
+// ※ Xcode の「Signing & Capabilities」画面で Team を選ぶと、project.pbxproj（共有ファイル）が書き換わり、
+//   git pull のときにぶつかる原因になる。Team は必ず Local.xcconfig に書くこと。
+
+CODE_SIGN_STYLE = Automatic
+DEVELOPMENT_TEAM =
+PRODUCT_BUNDLE_IDENTIFIER = com.takaoka.app.onigame
+
+// 自分用の設定（無ければ読み飛ばす）
+#include? "Local.xcconfig"

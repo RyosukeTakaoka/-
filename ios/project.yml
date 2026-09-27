@@ -4,7 +4,6 @@
 # ファイルの追加・設定の変更は、この YAML を直してから xcodegen generate で作り直し、.xcodeproj ごとコミットする。
 name: OniGame
 options:
-  bundleIdPrefix: com.example
   deploymentTarget:
     iOS: "17.0"
   developmentLanguage: ja
@@ -29,6 +28,12 @@ targets:
     platform: iOS
     sources:
       - path: OniGame
+    # Team と Bundle Identifier は Config/Signing.xcconfig（共有の既定値）と
+    # Config/Local.xcconfig（自分用・Git 管理外）で決める。ここ（target の settings）には書かない
+    # （ここに書くと xcconfig より優先され、自分用の設定が効かなくなるため）
+    configFiles:
+      Debug: Config/Signing.xcconfig
+      Release: Config/Signing.xcconfig
     dependencies:
       - package: OniGameCore
       - package: Firebase
@@ -39,14 +44,15 @@ targets:
         product: FirebaseFunctions
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.example.onigame # 自分のものに変える（Firebase コンソールの iOS アプリと同じにする）
         TARGETED_DEVICE_FAMILY: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon # Assets.xcassets/AppIcon（1024×1024 の1枚から各サイズを自動で作る）
         GENERATE_INFOPLIST_FILE: NO
     info:
       path: OniGame/Info.plist
       properties:
         CFBundleDisplayName: リアル鬼ごっこ
         CFBundleDevelopmentRegion: ja
+        CFBundleIconName: AppIcon
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         # 位置情報の利用目的（許可ダイアログに表示される）
@@ -55,7 +61,7 @@ targets:
         UIBackgroundModes: [location]
         # 招待リンク onigame://join?code=1234
         CFBundleURLTypes:
-          - CFBundleURLName: com.example.onigame.invite
+          - CFBundleURLName: onigame.invite
             CFBundleURLSchemes: [onigame]
         # Firebase Emulator（http://Mac の IP:ポート）に接続するため。本番は https なので影響しない
         NSAppTransportSecurity:

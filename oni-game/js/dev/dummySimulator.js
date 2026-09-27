@@ -10,6 +10,7 @@ import { DISPLAY } from '../game/visibility.js';
 
 const HUNTER_SPEED_MPS = 3; // 鬼の速さ（小走り）
 const RUNNER_SPEED_MPS = 2; // 逃走者の速さ
+const MISSION_ATTEMPT_RATE = 0.7; // ダミーの逃走者がミッションに挑戦する割合（成功・失敗の両方を確認できるように）
 
 /**
  * @param {{ getControlledId: () => string|null, intervalMs?: number, rng?: () => number }} options
@@ -18,6 +19,7 @@ const RUNNER_SPEED_MPS = 2; // 逃走者の速さ
  */
 export function startDummySimulator({ getControlledId, intervalMs = 1000, rng = Math.random }) {
   const headings = new Map();
+  const attempts = new Map(); // `${runnerId}:${missionIndex}` -> 挑戦するか
 
   function step() {
     const s = gameStore.getState();
@@ -34,7 +36,7 @@ export function startDummySimulator({ getControlledId, intervalMs = 1000, rng = 
       if (p.role === ROLE.HUNTER) {
         heading = chaseHeading(p.id, pos, now) ?? wander(p.id, pos, s.area);
       } else {
-        heading = wander(p.id, pos, s.area);
+        heading = missionHeading(p.id, pos, now) ?? wander(p.id, pos, s.area);
       }
       const speed = p.role === ROLE.HUNTER ? HUNTER_SPEED_MPS : RUNNER_SPEED_MPS;
       updatePosition(p.id, destinationPoint(pos, speed * dt, heading), now);
@@ -55,6 +57,15 @@ export function startDummySimulator({ getControlledId, intervalMs = 1000, rng = 
     }
     if (!best || best.d < best.area.radiusM * 0.5) return null;
     return bearingDeg(pos, best.area.center);
+  }
+
+  // ミッション中なら（挑戦すると決めた場合）自分の目的地へ向かう。目的地は本人のビューから読む
+  function missionHeading(runnerId, pos, now) {
+    const mission = getPlayerView(runnerId, now).self?.mission;
+    if (!mission?.destination) return null;
+    const key = `${runnerId}:${mission.index}`;
+    if (!attempts.has(key)) attempts.set(key, rng() < MISSION_ATTEMPT_RATE);
+    return attempts.get(key) ? bearingDeg(pos, mission.destination) : null;
   }
 
   // ふらふら歩く。エリアの端に近づいたら中心へ戻る

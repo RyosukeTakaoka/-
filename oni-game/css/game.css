@@ -104,3 +104,21 @@
   z-index: 15;
 }
 .dev-panel select { font-size: 13px; background: #1c1c22; border: 1px solid var(--line); border-radius: 6px; padding: 4px; }
+
+.mission-panel {
+  position: absolute;
+  left: 12px; right: 12px;
+  top: calc(64px + env(safe-area-inset-top));
+  padding: 10px 12px;
+  background: rgba(20, 83, 45, 0.95);
+  border: 1px solid #16a34a;
+  border-radius: 12px;
+  z-index: 12;
+}
+.mission-panel:not(.mine) { background: rgba(88, 28, 135, 0.92); border-color: #a855f7; }
+.mission-title { font-weight: 800; font-size: 15px; }
+.mission-detail { font-size: 13px; margin-top: 2px; }
+.mission-safety { font-size: 12px; color: #fde68a; margin-top: 4px; }
+.mission-panel .btn { margin-top: 6px; }
+/* ミッション表示中はバナーをその下にずらす */
+.game:has(.mission-panel:not([hidden])) .game-banners { top: calc(150px + env(safe-area-inset-top)); }

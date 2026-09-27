@@ -62,6 +62,6 @@ export function startStoreGame({ ids = ['host', 'r1', 'r2'], settings = {}, posi
     selfId: ids[0],
     players: ids.map((id, i) => createPlayer({ id, name: id, isHost: i === 0 })),
   });
-  startGame({ now: 0, rng, privacyRng: createSeededRng(7), initialPositions: positions });
+  startGame({ now: 0, rng, privacyRng: createSeededRng(7), missionRng: createSeededRng(11), initialPositions: positions });
   return gameStore.getState();
 }

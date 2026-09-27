@@ -9,7 +9,13 @@ export const CIRCLE_STYLE = Object.freeze({
   capture: { stroke: '#fca5a5', fill: '#ef4444', fillOpacity: 0.15, strokeWidth: 1 },
   possibleArea: { stroke: '#a855f7', fill: '#a855f7', fillOpacity: 0.18, strokeWidth: 2 }, // 鬼から見た逃走者
   ownPossibleArea: { stroke: '#60a5fa', fill: '#60a5fa', fillOpacity: 0.08, strokeWidth: 1 }, // 自分が鬼にどう見えているか
+  destination: { stroke: '#22c55e', fill: '#22c55e', fillOpacity: 0.25, strokeWidth: 2 }, // ミッション目的地の到達範囲
+  exclusion: { stroke: '#9ca3af', fill: '#6b7280', fillOpacity: 0.35, strokeWidth: 1 }, // 目的地の除外エリア
 });
+
+export function addDestinationMarker(board, destination) {
+  return board.addMarker({ position: destination, element: pin('pin-destination', '🎯', destination.label ?? '目的地'), title: 'ミッション目的地' });
+}
 
 function pin(className, emoji, label) {
   const wrap = document.createElement('div');

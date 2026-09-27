@@ -13,7 +13,9 @@ import {
   MAX_HUNTERS,
   settingsWarnings,
 } from '../game/settings.js';
-import { gameStore, updateSettings, setStartPoint, enterLobby } from '../game/gameState.js';
+import {
+  gameStore, updateSettings, setStartPoint, enterLobby, addExclusionZone, clearExclusionZones,
+} from '../game/gameState.js';
 import { createBoard } from '../map/map.js';
 import { addStartMarker, addAreaCircle, CIRCLE_STYLE } from '../map/markers.js';
 import { getCurrentPosition } from '../services/locationService.js';
@@ -83,6 +85,20 @@ const TEMPLATE = `
     <p id="start-status" class="hint"></p>
   </section>
 
+  <section class="card">
+    <h3>ミッション目的地の除外エリア</h3>
+    <p class="hint">
+      ミッションの目的地は、エリア内に自動で作られます（地図の建物・道路の情報は使いません）。
+      車道・池や川・私有地・立入禁止の場所・建物がある所は、ここで除外エリア（灰色の円）にしてください。
+      安全に歩き回れる場所（校庭・公園など）をゲームエリアにするのがおすすめです。
+    </p>
+    <div class="row">
+      <button id="exclusion-mode" class="btn btn-small" type="button">🚫 地図タップで除外エリアを置く</button>
+      <button id="exclusion-clear" class="btn btn-small" type="button">全部消す</button>
+    </div>
+    <p id="exclusion-status" class="hint"></p>
+  </section>
+
   <p id="settings-warning" class="warning" hidden></p>
   <button id="create-room" class="btn btn-primary" type="button">ルームを作成</button>
 </div>`;
@@ -92,9 +108,19 @@ export const createScreen = (() => {
   let unsubscribe = null;
   let startMarker = null;
   let areaCircle = null;
+  let exclusionCircles = [];
+  let exclusionMode = false;
   let disposed = false;
 
   function renderStart(root, state) {
+    root.querySelector('#exclusion-status').textContent =
+      `除外エリア: ${state.exclusionZones.length}か所${exclusionMode ? '（地図をタップして追加中）' : ''}`;
+    if (board) {
+      for (const c of exclusionCircles) c.remove();
+      exclusionCircles = state.exclusionZones.map((z) =>
+        board.addCircle({ center: z.center, radiusM: z.radiusM, style: CIRCLE_STYLE.exclusion }),
+      );
+    }
     const status = root.querySelector('#start-status');
     status.textContent = state.startPoint
       ? `開始地点: ${state.startPoint.lat.toFixed(5)}, ${state.startPoint.lng.toFixed(5)} / 半径 ${formatDistance(state.settings.radiusM)}`
@@ -205,6 +231,16 @@ export const createScreen = (() => {
       root.querySelector('#hunter-minus').addEventListener('click', () => changeHunters(-1));
       root.querySelector('#hunter-plus').addEventListener('click', () => changeHunters(1));
 
+      const modeButton = root.querySelector('#exclusion-mode');
+      modeButton.addEventListener('click', () => {
+        exclusionMode = !exclusionMode;
+        modeButton.textContent = exclusionMode ? '✅ 除外エリアの追加を終える' : '🚫 地図タップで除外エリアを置く';
+        modeButton.classList.toggle('btn-danger', exclusionMode);
+        renderStart(root, gameStore.getState());
+        root.querySelector('#create-map').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+      root.querySelector('#exclusion-clear').addEventListener('click', () => clearExclusionZones());
+
       root.querySelector('#create-back').addEventListener('click', () => navigate('home'));
 
       root.querySelector('#use-location').addEventListener('click', async (e) => {
@@ -247,7 +283,7 @@ export const createScreen = (() => {
             return;
           }
           board = b;
-          board.onClick(chooseStart);
+          board.onClick((p) => (exclusionMode ? addExclusionZone(p) : chooseStart(p)));
           if (initial.area) board.fitCircle(initial.area.center, initial.area.radiusM);
           renderStart(root, gameStore.getState());
         },
@@ -262,6 +298,8 @@ export const createScreen = (() => {
       board = null;
       startMarker = null;
       areaCircle = null;
+      exclusionCircles = [];
+      exclusionMode = false;
     },
   };
 })();

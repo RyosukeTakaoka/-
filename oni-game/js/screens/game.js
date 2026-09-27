@@ -3,23 +3,26 @@
 
 import { fromHtml, toast } from '../utils/dom.js';
 import {
-  gameStore, getPlayerView, updatePosition, requestCapture, tickGame, abortGame, resetGame, PHASE,
+  gameStore, getPlayerView, updatePosition, requestCapture, requestNewDestination, tickGame, abortGame, resetGame, PHASE,
 } from '../game/gameState.js';
 import { CAPTURE_FAILURE_MESSAGE } from '../game/capture.js';
 import { createBoard } from '../map/map.js';
 import { addStartMarker, addAreaCircle } from '../map/markers.js';
 import { createPlayerLayer } from '../map/playerLayer.js';
+import { createMissionLayer } from '../map/missionLayer.js';
 import { watchPosition } from '../services/locationService.js';
 import { roomService } from '../services/roomService.js';
 import { isDevMode } from '../dev/devMode.js';
 import { startDummySimulator } from '../dev/dummySimulator.js';
 import { createDevPanel } from '../dev/devPanel.js';
 import { HUD_TEMPLATE, renderHud, renderClock } from './components/gameHud.js';
+import { MISSION_PANEL_TEMPLATE, renderMissionPanel } from './components/missionPanel.js';
 
 const TEMPLATE = `
 <div class="screen game">
   <div id="game-map" class="game-map"></div>
   ${HUD_TEMPLATE}
+  ${MISSION_PANEL_TEMPLATE}
   <div id="dev-slot"></div>
   <footer class="game-actions">
     <button id="game-fit" class="btn btn-small" type="button">🎯 エリア全体</button>
@@ -31,6 +34,8 @@ export const gameScreen = (() => {
   let root = null;
   let board = null;
   let layer = null;
+  let missionLayer = null;
+  let lastOwnResult = null; // 自分のミッション結果の変化を知らせるため
   let viewerId = null;
   let lastLogId = 0;
   let devPanel = null;
@@ -50,7 +55,11 @@ export const gameScreen = (() => {
     for (const entry of v.log) {
       if (entry.id <= lastLogId) continue;
       lastLogId = entry.id;
-      if (entry.type === 'reveal') {
+      if (entry.type === 'mission_start') {
+        const mine = getPlayerView(viewerId).self?.mission;
+        toast(mine?.destination ? '🎯 ミッション発生！ 制限時間内に目的地へ向かえ' : entry.text, 3500);
+        navigator.vibrate?.([200, 100, 200, 100, 200]);
+      } else if (entry.type === 'reveal') {
         const self = gameStore.getState().players.find((p) => p.id === viewerId);
         if (self?.status !== 'active') continue;
         toast(self.role === 'hunter' ? '🔔 逃走者の可能性エリアが更新された' : '⚠ あなたの可能性エリアが鬼に公開された');
@@ -65,10 +74,25 @@ export const gameScreen = (() => {
     }
   }
 
+  function notifyOwnMissionResult(v) {
+    const own = v.self?.mission;
+    const key = own ? `${own.index}:${own.result}` : null;
+    if (key && key !== lastOwnResult && lastOwnResult?.startsWith(`${own.index}:`)) {
+      if (own.result === 'success') {
+        toast('✅ ミッション成功！', 3000);
+        navigator.vibrate?.([100, 50, 100, 50, 300]);
+      }
+    }
+    lastOwnResult = key;
+  }
+
   function render() {
     const v = view();
     renderHud(root, v);
+    renderMissionPanel(root, v);
+    notifyOwnMissionResult(v);
     layer?.update(v);
+    missionLayer?.update(v);
     notifyNewLogs(v);
     devPanel?.update(gameStore.getState().players, viewerId);
     root.querySelector('#game-end').hidden = !(v.phase === PHASE.PLAYING && v.self?.isHost);
@@ -116,6 +140,11 @@ export const gameScreen = (() => {
         if (!result.ok) toast(CAPTURE_FAILURE_MESSAGE[result.reason]);
         else navigator.vibrate?.([100, 50, 100]);
       });
+      root.querySelector('#mission-reroll').addEventListener('click', () => {
+        if (!confirm('目的地を変更しますか？（1回だけ）')) return;
+        const result = requestNewDestination(viewerId);
+        toast(result.ok ? '目的地を変更しました' : '目的地を変更できませんでした');
+      });
       root.querySelector('#game-fit').addEventListener('click', () => {
         const { area } = gameStore.getState();
         board?.fitCircle(area.center, area.radiusM);
@@ -132,7 +161,9 @@ export const gameScreen = (() => {
       cleanups.push(gameStore.subscribe(render));
       const ticker = setInterval(() => {
         tickGame();
-        renderClock(root, view());
+        const v = view();
+        renderClock(root, v);
+        renderMissionPanel(root, v);
       }, 250);
       cleanups.push(() => clearInterval(ticker));
 
@@ -145,6 +176,7 @@ export const gameScreen = (() => {
         const { area } = gameStore.getState();
         addAreaCircle(board, area);
         addStartMarker(board, area.center);
+        missionLayer = createMissionLayer(board);
         layer = createPlayerLayer(board);
         if (isDevMode) cleanups.push(board.onClick((p) => updatePosition(viewerId, p)));
         board.fitCircle(area.center, area.radiusM);
@@ -158,9 +190,12 @@ export const gameScreen = (() => {
       for (const fn of cleanups) fn();
       cleanups = [];
       layer?.clear();
+      missionLayer?.clear();
       board?.destroy();
       board = null;
       layer = null;
+      missionLayer = null;
+      lastOwnResult = null;
       devPanel = null;
       root = null;
     },

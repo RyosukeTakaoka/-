@@ -8,3 +8,5 @@
   overflow: hidden;
   background: var(--surface-2);
 }
+
+.row { display: flex; flex-wrap: wrap; gap: 8px; }

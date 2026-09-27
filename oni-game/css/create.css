@@ -1,0 +1,10 @@
+.stepper { display: flex; align-items: center; justify-content: center; gap: 24px; }
+.stepper output { font-size: 28px; font-weight: 800; min-width: 40px; text-align: center; }
+
+.create-map {
+  height: 280px;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface-2);
+}

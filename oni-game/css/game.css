@@ -1,0 +1,53 @@
+/* ゲーム画面は地図を全画面に敷き、その上にHUDを重ねる */
+[data-screen="game"] .screen.game {
+  position: fixed;
+  inset: 0;
+  max-width: none;
+  padding: 0;
+}
+.game-map { position: absolute; inset: 0; }
+
+.hud {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: calc(8px + env(safe-area-inset-top)) 12px 8px;
+  background: rgba(17, 17, 20, 0.88);
+  backdrop-filter: blur(6px);
+  z-index: 10;
+}
+.role-badge { padding: 6px 10px; border-radius: 8px; font-weight: 700; font-size: 14px; background: var(--surface-2); }
+.role-badge.hunter { background: var(--hunter); }
+.role-badge.runner { background: var(--runner); }
+.hud-timer { font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.hud-timer.danger { color: #f87171; }
+.hud-counts { font-size: 12px; color: var(--muted); text-align: right; }
+
+.dev-banner {
+  position: absolute;
+  top: calc(60px + env(safe-area-inset-top));
+  left: 12px; right: 12px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #fde68a;
+  background: rgba(120, 53, 15, 0.85);
+  border-radius: 8px;
+  z-index: 10;
+}
+
+.game-actions {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+  z-index: 10;
+}
+
+/* 下部ボタンと地図の操作ボタンが重ならないように */
+.game .fallback-zoom,
+.game .fallback-notice { bottom: calc(72px + env(safe-area-inset-bottom)); }

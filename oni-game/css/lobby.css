@@ -1,0 +1,17 @@
+.room-code-card { text-align: center; }
+.room-code { font-size: 40px; font-weight: 800; letter-spacing: 8px; color: #fca5a5; margin-bottom: 8px; }
+
+.rules { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; font-size: 14px; }
+.rules dt { color: var(--muted); }
+.rules dd { font-weight: 700; }
+
+.player-list { list-style: none; display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+.player-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border-radius: 10px;
+}
+.player-list .tag { color: var(--muted); font-size: 12px; }

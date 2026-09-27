@@ -19,8 +19,6 @@ packages:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "1.0.0"
-    CURRENT_PROJECT_VERSION: "1"
 
 targets:
   OniGame:
@@ -53,6 +51,9 @@ targets:
         CFBundleDisplayName: リアル鬼ごっこ
         CFBundleDevelopmentRegion: ja
         CFBundleIconName: AppIcon
+        # バージョンとビルド番号は Info.plist に直接書かず、ビルド設定（Config/*.xcconfig）から入れる
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         # 位置情報の利用目的（許可ダイアログに表示される）

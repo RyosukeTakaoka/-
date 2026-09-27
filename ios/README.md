@@ -97,6 +97,8 @@ cp ios/Config/Local.xcconfig.example ios/Config/Local.xcconfig
 - `Local.xcconfig` は Git 管理外なので、`git pull` や `xcodegen generate` をしても Team は変わりません
 - Bundle Identifier の既定値（`com.takaoka.app.onigame`）は `ios/Config/Signing.xcconfig` にあります
 - Xcode の「Signing & Capabilities」画面で Team を選ばないでください（共有の `project.pbxproj` が書き換わり、`git pull` でぶつかります）
+- バージョン・ビルド番号も `Local.xcconfig` に `MARKETING_VERSION = 1.0.1`・`CURRENT_PROJECT_VERSION = 2` のように書きます
+  （Info.plist には `$(MARKETING_VERSION)`・`$(CURRENT_PROJECT_VERSION)` と書いてあり、ここの値が入ります。Xcode の General 画面では変えないでください）
 
 ### 2-A. 1台で試す（端末内モード・開発用）
 

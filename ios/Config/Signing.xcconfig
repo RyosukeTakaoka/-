@@ -1,4 +1,4 @@
-// 署名（Team・Bundle Identifier）の設定
+// 署名（Team・Bundle Identifier）とバージョンの設定
 //
 // このファイルは GitHub で共有する「既定値」。自分の Team などは、ここではなく
 // 同じフォルダの Local.xcconfig（Git 管理外）に書く。Local.xcconfig の値がこのファイルの値より優先される。
@@ -10,6 +10,12 @@
 CODE_SIGN_STYLE = Automatic
 DEVELOPMENT_TEAM =
 PRODUCT_BUNDLE_IDENTIFIER = com.takaoka.app.onigame
+
+// バージョン（App Store に表示される「1.0.0」）とビルド番号（アップロードのたびに増やす数字）
+// Info.plist には $(MARKETING_VERSION) / $(CURRENT_PROJECT_VERSION) と書いてあり、ここの値が入る。
+// 変えるときは Local.xcconfig に書く（Xcode の General 画面で変えると project.pbxproj が書き換わるため）
+MARKETING_VERSION = 1.0.0
+CURRENT_PROJECT_VERSION = 1
 
 // 自分用の設定（無ければ読み飛ばす）
 #include? "Local.xcconfig"

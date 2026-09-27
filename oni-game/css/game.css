@@ -72,23 +72,6 @@
   z-index: 10;
 }
 
-.finish-panel {
-  position: absolute;
-  left: 16px; right: 16px;
-  top: 30%;
-  padding: 20px;
-  text-align: center;
-  background: rgba(28, 28, 34, 0.97);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  z-index: 20;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.finish-title { font-size: 26px; font-weight: 800; }
-.finish-self { font-weight: 700; margin-bottom: 8px; }
-
 .dev-panel {
   position: absolute;
   left: 12px;

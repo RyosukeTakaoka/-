@@ -14,7 +14,7 @@ import {
   settingsWarnings,
 } from '../game/settings.js';
 import {
-  gameStore, updateSettings, setStartPoint, enterLobby, addExclusionZone, clearExclusionZones,
+  gameStore, updateSettings, setStartPoint, enterLobby, addExclusionZone, clearExclusionZones, returnToLobby, resetGame,
 } from '../game/gameState.js';
 import { createBoard } from '../map/map.js';
 import { addStartMarker, addAreaCircle, CIRCLE_STYLE } from '../map/markers.js';
@@ -151,7 +151,7 @@ export const createScreen = (() => {
   }
 
   return {
-    mount(root, { navigate, hostName }) {
+    mount(root, { navigate, hostName, rematch = false }) {
       disposed = false;
       root.append(fromHtml(TEMPLATE));
       const { settings } = gameStore.getState();
@@ -242,7 +242,19 @@ export const createScreen = (() => {
       });
       root.querySelector('#exclusion-clear').addEventListener('click', () => clearExclusionZones());
 
-      root.querySelector('#create-back').addEventListener('click', () => navigate('home'));
+      if (rematch) {
+        // もう一度遊ぶ: 同じルーム・メンバー・設定。開始地点と除外エリアは設定し直す
+        root.querySelector('.screen-header h2').textContent = 'もう一度遊ぶ：ゲーム設定';
+        root.querySelector('#create-room').textContent = 'ロビーへ（同じメンバー）';
+      }
+      root.querySelector('#create-back').addEventListener('click', async () => {
+        if (rematch) {
+          if (!confirm('ルームを解散してホームに戻りますか？')) return;
+          await roomService.leaveRoom();
+          resetGame();
+        }
+        navigate('home');
+      });
 
       root.querySelector('#use-location').addEventListener('click', async (e) => {
         const button = e.currentTarget;
@@ -261,6 +273,11 @@ export const createScreen = (() => {
         const state = gameStore.getState();
         if (!state.startPoint) {
           toast('ゲーム開始地点を設定してください');
+          return;
+        }
+        if (rematch) {
+          returnToLobby();
+          navigate('lobby');
           return;
         }
         let created;

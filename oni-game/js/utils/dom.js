@@ -20,12 +20,21 @@ export function el(tag, { className, text, attrs } = {}, children = []) {
 // 通知は順番に表示する（同時に複数届いても上書きで消えないように）
 const toastQueue = [];
 let toastShowing = null;
+let toastGeneration = 0; // clearToasts() で古いタイマーを無効にするため
 
 export function toast(message, ms = 2500) {
   if (toastShowing === message || toastQueue.some((t) => t.message === message)) return;
   toastQueue.push({ message, ms });
   if (toastQueue.length > 4) toastQueue.shift(); // 溜まりすぎたら古いものを捨てる
   if (!toastShowing) showNextToast();
+}
+
+/** 待っている通知と表示中の通知を消す（画面が大きく切り替わるとき用） */
+export function clearToasts() {
+  toastQueue.length = 0;
+  toastShowing = null;
+  toastGeneration += 1;
+  document.getElementById('toast')?.classList.remove('show');
 }
 
 function showNextToast() {
@@ -44,7 +53,10 @@ function showNextToast() {
   node.textContent = next.message;
   node.classList.add('show');
   // 後ろに待っている通知があるときは少し短めに切り替える
-  setTimeout(showNextToast, toastQueue.length > 0 ? Math.min(next.ms, 2000) : next.ms);
+  const generation = toastGeneration;
+  setTimeout(() => {
+    if (generation === toastGeneration) showNextToast();
+  }, toastQueue.length > 0 ? Math.min(next.ms, 2000) : next.ms);
 }
 
 /** 保存できない環境（プライベートモード等）でも落ちない localStorage */

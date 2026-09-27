@@ -3,7 +3,7 @@
 
 import { fromHtml, toast } from '../utils/dom.js';
 import {
-  gameStore, getPlayerView, updatePosition, requestCapture, requestNewDestination, tickGame, abortGame, resetGame, PHASE,
+  gameStore, getPlayerView, updatePosition, requestCapture, requestNewDestination, tickGame, abortGame, PHASE,
 } from '../game/gameState.js';
 import { CAPTURE_FAILURE_MESSAGE } from '../game/capture.js';
 import { createBoard } from '../map/map.js';
@@ -11,7 +11,6 @@ import { addStartMarker, addAreaCircle } from '../map/markers.js';
 import { createPlayerLayer } from '../map/playerLayer.js';
 import { createMissionLayer } from '../map/missionLayer.js';
 import { watchPosition } from '../services/locationService.js';
-import { roomService } from '../services/roomService.js';
 import { isDevMode } from '../dev/devMode.js';
 import { startDummySimulator } from '../dev/dummySimulator.js';
 import { createDevPanel } from '../dev/devPanel.js';
@@ -43,6 +42,8 @@ export const gameScreen = (() => {
   let cleanups = [];
   let stopRealtime = [];
   let disposed = false;
+  let goTo = null; // navigate
+  let leaving = false;
 
   const view = () => getPlayerView(viewerId);
 
@@ -120,7 +121,14 @@ export const gameScreen = (() => {
     notifyOwnBlurChange(v); // ログの通知より後（本人向けの通知を優先して表示する）
     devPanel?.update(gameStore.getState().players, viewerId);
     root.querySelector('#game-end').hidden = !(v.phase === PHASE.PLAYING && v.self?.isHost);
-    if (v.phase === PHASE.FINISHED) stopLocationSharing();
+    if (v.phase === PHASE.FINISHED && !leaving) {
+      // 終了: 位置の監視を止めて結果画面へ（結果画面は位置情報を使わない）
+      leaving = true;
+      stopLocationSharing();
+      setTimeout(() => {
+        if (!disposed) goTo?.('result', { viewerId });
+      }, 1200);
+    }
   }
 
   function startLocationSharing(selfId) {
@@ -142,6 +150,8 @@ export const gameScreen = (() => {
     mount(rootEl, { navigate }) {
       root = rootEl;
       disposed = false;
+      leaving = false;
+      goTo = navigate;
       root.append(fromHtml(TEMPLATE));
       const state = gameStore.getState();
       viewerId = state.selfId;
@@ -175,11 +185,6 @@ export const gameScreen = (() => {
       });
       root.querySelector('#game-end').addEventListener('click', () => {
         if (confirm('ゲームを終了しますか？')) abortGame();
-      });
-      root.querySelector('#finish-home').addEventListener('click', async () => {
-        await roomService.leaveRoom();
-        resetGame();
-        navigate('home');
       });
 
       cleanups.push(gameStore.subscribe(render));

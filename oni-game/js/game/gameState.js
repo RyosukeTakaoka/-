@@ -12,6 +12,8 @@ import { preparePlayersForGame, ROLE } from './player.js';
 import { attemptCapture, CAPTURE_FAILURE } from './capture.js';
 import { judgeOutcome, FINISH_REASON } from './outcome.js';
 import { buildPlayerView } from './visibility.js';
+import { buildResultSummary } from './resultSummary.js';
+import { randomId } from '../utils/random.js';
 import { emptyPrivacy, initPrivacy, publishIfDue, publishMissing, withdraw } from './locationPublisher.js';
 import { generateMissionSchedule } from './missionSchedule.js';
 import {
@@ -31,6 +33,7 @@ const MAX_LOG = 50;
 export function initialState() {
   return {
     phase: PHASE.SETUP,
+    gameId: null, // ゲームごとに新しく作る
     settings: { ...DEFAULT_SETTINGS },
     startPoint: null, // ゲーム開始地点 { lat, lng }
     area: null, // { center, radiusM }
@@ -45,6 +48,7 @@ export function initialState() {
     startedAt: null,
     endsAt: null,
     result: null, // { winner, reason, finishedAt }
+    resultSummary: null, // 結果画面用（位置情報を含まない。resultSummary.js）
     log: [], // [{ id, at, type, text, playerId }] 位置情報は含めない
   };
 }
@@ -116,6 +120,7 @@ export function startGame({
   const hunterNames = players.filter((p) => p.role === ROLE.HUNTER).map((p) => p.name);
   gameStore.setState({
     phase: PHASE.PLAYING,
+    gameId: randomId(),
     players,
     positions,
     privacy: initPrivacy(players, privacyRng),
@@ -124,6 +129,7 @@ export function startGame({
     startedAt: now,
     endsAt: now + durationMs,
     result: null,
+    resultSummary: null,
     log: [],
   });
   addLog(now, 'start', `ゲーム開始！ 鬼は ${hunterNames.join('、')}`);
@@ -243,13 +249,17 @@ function finish({ winner, reason }, now) {
   gameStore.setState({
     phase: PHASE.FINISHED,
     endsAt: Math.min(s.endsAt, now),
-    result: { winner, reason, finishedAt: now },
+    // 時間切れの判定が少し遅れて動いても、終了時刻は予定の終了時刻を超えない
+    result: { winner, reason, finishedAt: Math.min(s.endsAt, now) },
     positions: {}, // 終了したら実位置は保持しない
     privacy: emptyPrivacy(), // 秘密の値・公開済みエリアも消す
     // 進行中のミッションは無効として終え、以降は発生させない。目的地と発生予定も消す（履歴に座標は残らない）
     missions: { ...cancelMissions(s.missions, now), schedule: [], nextIndex: 0 },
     captureAttempts: {},
   });
+  // 位置情報を破棄した「後」の状態から結果を作る（結果は位置情報に依存しない）
+  const cleared = gameStore.getState();
+  gameStore.setState({ resultSummary: buildResultSummary(cleared) });
   const text = {
     [FINISH_REASON.TIME_UP]: '時間切れ！ 逃走者の勝ち',
     [FINISH_REASON.ALL_CAUGHT]: '全員確保！ 鬼の勝ち',
@@ -263,6 +273,35 @@ function addLog(at, type, text, playerId = null) {
     const entry = { id: (s.log.at(-1)?.id ?? 0) + 1, at, type, text, playerId };
     return { log: [...s.log, entry].slice(-MAX_LOG) };
   });
+}
+
+// ---- もう一度遊ぶ ----
+
+/**
+ * 結果画面から「もう一度遊ぶ」。
+ * 再利用するのは ルーム・メンバー・ゲーム設定 だけ。
+ * 開始地点・除外エリア（場所の情報）・実位置・秘密値・可能性エリア・ミッション・結果はすべて初期状態に戻す。
+ * ゲームID・秘密値・ミッションのスケジュールと目的地は、次の startGame() で新しく作られる。
+ */
+export function prepareRematch() {
+  const s = gameStore.getState();
+  if (s.phase !== PHASE.FINISHED) throw new Error('ゲーム終了後にだけ使えます');
+  gameStore.setState({
+    ...initialState(),
+    phase: PHASE.SETUP,
+    settings: { ...s.settings },
+    room: s.room,
+    selfId: s.selfId,
+    players: s.players.map(({ id, name, isHost, isDummy }) => ({ id, name, isHost, isDummy })),
+  });
+}
+
+/** 作成画面から、同じルーム・同じメンバーのままロビーへ戻る（もう一度遊ぶとき） */
+export function returnToLobby() {
+  const s = gameStore.getState();
+  if (!s.room) throw new Error('ルームがありません');
+  if (!s.area) throw new Error('ゲーム開始地点を設定してください');
+  gameStore.setState({ phase: PHASE.LOBBY });
 }
 
 // ---- 読み取り ----

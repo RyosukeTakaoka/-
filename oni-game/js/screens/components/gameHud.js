@@ -1,8 +1,7 @@
-// ゲーム画面のHUD（役割・残り時間・人数・警告・確保ボタン・決着パネル）
+// ゲーム画面のHUD（役割・残り時間・人数・警告・確保ボタン）
 // 受け取るのは visibility.js のビューだけ。
 
 import { ROLE, ROLE_LABEL, STATUS } from '../../game/player.js';
-import { WINNER, FINISH_REASON } from '../../game/outcome.js';
 import { formatClock, remainingMs } from '../../game/gameTimer.js';
 
 export const HUD_TEMPLATE = `
@@ -20,12 +19,7 @@ export const HUD_TEMPLATE = `
   <p id="banner-gps" class="banner" hidden>📡 位置情報を取得しています…</p>
 </div>
 <button id="btn-capture" class="btn btn-primary btn-capture" type="button" hidden>🫳 確保！</button>
-<div id="finish-panel" class="finish-panel" hidden>
-  <p id="finish-title" class="finish-title"></p>
-  <p id="finish-reason" class="muted"></p>
-  <p id="finish-self" class="finish-self"></p>
-  <button id="finish-home" class="btn btn-primary" type="button">ホームに戻る</button>
-</div>`;
+`;
 
 function roleText(self) {
   if (!self?.role) return '-';
@@ -81,27 +75,5 @@ export function renderHud(root, view) {
   const canCapture = playing && self?.role === ROLE.HUNTER && self.status === STATUS.ACTIVE;
   root.querySelector('#btn-capture').hidden = !canCapture;
 
-  renderFinish(root, view);
   renderClock(root, view);
-}
-
-function renderFinish(root, view) {
-  const panel = root.querySelector('#finish-panel');
-  panel.hidden = view.phase !== 'finished';
-  if (panel.hidden || !view.result) return;
-  const { winner, reason } = view.result;
-  root.querySelector('#finish-title').textContent =
-    winner === WINNER.HUNTERS ? '👹 鬼の勝ち！' : winner === WINNER.RUNNERS ? '🏃 逃走者の勝ち！' : 'ゲーム終了';
-  root.querySelector('#finish-reason').textContent = {
-    [FINISH_REASON.TIME_UP]: '制限時間まで逃げ切りました',
-    [FINISH_REASON.ALL_CAUGHT]: '逃走者が全員確保されました',
-    [FINISH_REASON.ABORTED]: 'ホストがゲームを終了しました',
-  }[reason];
-  const self = view.self;
-  const side = self?.role === ROLE.HUNTER ? WINNER.HUNTERS : WINNER.RUNNERS;
-  root.querySelector('#finish-self').textContent = !winner
-    ? ''
-    : side === winner
-      ? 'あなたの陣営の勝利！'
-      : 'あなたの陣営の負け…';
 }

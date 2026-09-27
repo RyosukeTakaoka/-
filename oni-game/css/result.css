@@ -1,0 +1,27 @@
+.result-hero { text-align: center; padding: 16px 0 4px; }
+.result-emoji { font-size: 56px; }
+.result-hero h1 { font-size: 26px; font-weight: 800; }
+.result-you { font-weight: 700; margin-top: 4px; }
+
+.result-players { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.result-players li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 8px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border-radius: 10px;
+}
+.result-players li.is-you { outline: 2px solid #facc15; }
+.result-name { font-weight: 700; }
+.result-role { justify-self: end; font-size: 13px; font-weight: 700; }
+.result-role.hunter { color: #fca5a5; }
+.result-role.runner { color: #93c5fd; }
+.result-status { grid-column: 1 / -1; font-size: 13px; color: var(--muted); }
+
+.result-missions { width: 100%; border-collapse: collapse; font-size: 13px; }
+.result-missions th, .result-missions td { padding: 8px 4px; border-bottom: 1px solid var(--line); text-align: center; }
+.result-missions tbody th { text-align: left; font-weight: 700; }
+.result-missions thead th { color: var(--muted); font-weight: 400; white-space: nowrap; }
+.result-missions td { white-space: nowrap; }
+.mission-note { display: block; font-size: 11px; font-weight: 400; color: var(--muted); }

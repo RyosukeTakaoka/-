@@ -7,7 +7,7 @@
 //     id, index, startedAt, endsAt, arrivalRadiusM,
 //     participants: { [runnerId]: { destination, result, resolvedAt, reason } }
 //   }
-//   history: [{ id, index, startedAt, endedAt, results: { [runnerId]: result } }] … 座標は残さない
+//   history: [{ id, index, startedAt, endedAt, endedBy, results: { [runnerId]: result } }] … 座標は残さない
 //   rerollsUsed: { [runnerId]: true } … 目的地の変更を使った人（1ゲーム1回。鬼には渡さない）
 //
 // ここにある関数はすべて純粋関数（入力の state を変更せず、新しい値を返す）。
@@ -122,7 +122,12 @@ function closeActive(missions, now, pendingResult, reason) {
   const { id, index, startedAt, participants } = next.active;
   const results = Object.fromEntries(Object.entries(participants).map(([rid, p]) => [rid, p.result]));
   return {
-    missions: { ...next, active: null, history: [...next.history, { id, index, startedAt, endedAt: now, results }] },
+    missions: {
+      ...next,
+      active: null,
+      // endedBy: 'time_up'（制限時間まで行われた）/ 'game_over'（ゲーム終了で打ち切り）
+      history: [...next.history, { id, index, startedAt, endedAt: now, endedBy: reason, results }],
+    },
     ended: { id, index, results },
   };
 }

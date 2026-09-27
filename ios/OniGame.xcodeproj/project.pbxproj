@@ -1,0 +1,471 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0146B86786719B3FD09DF86C /* FirebaseGameService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4AEEC1E644556B48B58A9BB /* FirebaseGameService.swift */; };
+		03C8E09AF7C021583329C930 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00605A04907CD3085372B1EA /* HomeView.swift */; };
+		046258525CB4C591561739D0 /* MapLayers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 155ABB59A654ED3B37710122 /* MapLayers.swift */; };
+		0F146F6E8D93C740D65CE5B3 /* FirebaseFunctions in Frameworks */ = {isa = PBXBuildFile; productRef = A5FC1087BE46588306B63851 /* FirebaseFunctions */; };
+		187F41E0B279F6DD0CAFF571 /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = B2DEC039C89D3F34E72B6655 /* FirebaseDatabase */; };
+		2AA7FA52EB696DC943352331 /* OniGameApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86B07E571452082FF493754B /* OniGameApp.swift */; };
+		2D1C99C074BF426E55F956B2 /* GameHUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138A507EDC57BD382D856827 /* GameHUD.swift */; };
+		349C2032536D464B22F2A9B3 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05FAA1F4BBE3379843158542 /* AppConfig.swift */; };
+		49B9B7C3F013D94213D199B7 /* LocalGameService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 144CA78F49F180F94B608455 /* LocalGameService.swift */; };
+		56A4CB4B8FE0ABA7BAEB0BEB /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04464DCD39F657EAE28715D1 /* AppModel.swift */; };
+		576296AF05392B45E3BA548C /* GameService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166C5BD7C67EE31AC54AD93C /* GameService.swift */; };
+		5F07D4E7007EA0F79A36070E /* BoardMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC661C5A06E66A2F9DF52AF /* BoardMap.swift */; };
+		71D4A9D39778D4D52D3B6CC7 /* ResultScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41B6FA0357588128460CF82B /* ResultScreen.swift */; };
+		7A1C0109C062319D38D578C8 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C7B540380692127835E108D /* RootView.swift */; };
+		8D4CB2226AC11C8C2E6F1E82 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 4871868EB63FCA2EDDFED214 /* FirebaseAuth */; };
+		AF7119202259D783A6EF7245 /* LobbyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF97589256029DF106FF5E64 /* LobbyView.swift */; };
+		B6F7BC90D80613AE14E95DE5 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CFE7741BEEEACB1D43A24D5 /* LocationService.swift */; };
+		D0C6C85E70D8F62CAEB65DAE /* ToastCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11555B7578C56035D24195FD /* ToastCenter.swift */; };
+		D6E96DF6E754CC3BF1FF0743 /* GameScreenModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CB229761120BC8AD1A33BD8 /* GameScreenModel.swift */; };
+		DC26ECF921725755703C4DA5 /* OniGameCore in Frameworks */ = {isa = PBXBuildFile; productRef = CAC7CEC48698B9B7A638AE21 /* OniGameCore */; };
+		E448FB4C9C7DC15E482EDBBB /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54B7EEE9E844A586E9941810 /* GameView.swift */; };
+		E92328144CE7279B847C27F3 /* CreateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AA8F11675BFD4D545324435 /* CreateView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		00605A04907CD3085372B1EA /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		04464DCD39F657EAE28715D1 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		05FAA1F4BBE3379843158542 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		11555B7578C56035D24195FD /* ToastCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastCenter.swift; sourceTree = "<group>"; };
+		138A507EDC57BD382D856827 /* GameHUD.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameHUD.swift; sourceTree = "<group>"; };
+		144CA78F49F180F94B608455 /* LocalGameService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalGameService.swift; sourceTree = "<group>"; };
+		155ABB59A654ED3B37710122 /* MapLayers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapLayers.swift; sourceTree = "<group>"; };
+		166C5BD7C67EE31AC54AD93C /* GameService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameService.swift; sourceTree = "<group>"; };
+		3CFE7741BEEEACB1D43A24D5 /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
+		41B6FA0357588128460CF82B /* ResultScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultScreen.swift; sourceTree = "<group>"; };
+		54B7EEE9E844A586E9941810 /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
+		5C7B540380692127835E108D /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		5CB229761120BC8AD1A33BD8 /* GameScreenModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScreenModel.swift; sourceTree = "<group>"; };
+		7A9C288271591B5FE8C523F8 /* OniGameCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = OniGameCore; path = OniGameCore; sourceTree = SOURCE_ROOT; };
+		86B07E571452082FF493754B /* OniGameApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OniGameApp.swift; sourceTree = "<group>"; };
+		8E91F3DC739E49E7BD78B5F7 /* OniGame.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = OniGame.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9AA8F11675BFD4D545324435 /* CreateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateView.swift; sourceTree = "<group>"; };
+		A4AEEC1E644556B48B58A9BB /* FirebaseGameService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseGameService.swift; sourceTree = "<group>"; };
+		C977FD69C8D95DD01086BF53 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		DF97589256029DF106FF5E64 /* LobbyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LobbyView.swift; sourceTree = "<group>"; };
+		FAC661C5A06E66A2F9DF52AF /* BoardMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardMap.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		CC54444BF6AFCEF97E83ABEA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DC26ECF921725755703C4DA5 /* OniGameCore in Frameworks */,
+				8D4CB2226AC11C8C2E6F1E82 /* FirebaseAuth in Frameworks */,
+				187F41E0B279F6DD0CAFF571 /* FirebaseDatabase in Frameworks */,
+				0F146F6E8D93C740D65CE5B3 /* FirebaseFunctions in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		18AD565E496062BC130AE4C9 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8E91F3DC739E49E7BD78B5F7 /* OniGame.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		29A26D14D98E201C51A2B97A /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				9AA8F11675BFD4D545324435 /* CreateView.swift */,
+				5CB229761120BC8AD1A33BD8 /* GameScreenModel.swift */,
+				54B7EEE9E844A586E9941810 /* GameView.swift */,
+				00605A04907CD3085372B1EA /* HomeView.swift */,
+				DF97589256029DF106FF5E64 /* LobbyView.swift */,
+				41B6FA0357588128460CF82B /* ResultScreen.swift */,
+				5C7B540380692127835E108D /* RootView.swift */,
+				B3C7C35F53EF4E9877C5F2B0 /* Components */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		2E57F61C6A02EEF28481DAE1 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				05FAA1F4BBE3379843158542 /* AppConfig.swift */,
+				04464DCD39F657EAE28715D1 /* AppModel.swift */,
+				86B07E571452082FF493754B /* OniGameApp.swift */,
+				11555B7578C56035D24195FD /* ToastCenter.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		63C752FC49D18462A18347AB /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				7A9C288271591B5FE8C523F8 /* OniGameCore */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		A189EF547D6729105E86E81E /* Map */ = {
+			isa = PBXGroup;
+			children = (
+				FAC661C5A06E66A2F9DF52AF /* BoardMap.swift */,
+				155ABB59A654ED3B37710122 /* MapLayers.swift */,
+			);
+			path = Map;
+			sourceTree = "<group>";
+		};
+		B3C7C35F53EF4E9877C5F2B0 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				138A507EDC57BD382D856827 /* GameHUD.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		BF78D704E132C644C428D756 /* OniGame */ = {
+			isa = PBXGroup;
+			children = (
+				C977FD69C8D95DD01086BF53 /* Info.plist */,
+				2E57F61C6A02EEF28481DAE1 /* App */,
+				A189EF547D6729105E86E81E /* Map */,
+				FD6C1253C4A6D0ABEE99F9FA /* Services */,
+				29A26D14D98E201C51A2B97A /* Views */,
+			);
+			path = OniGame;
+			sourceTree = "<group>";
+		};
+		CDA0931909459C612D4CDAC8 = {
+			isa = PBXGroup;
+			children = (
+				BF78D704E132C644C428D756 /* OniGame */,
+				63C752FC49D18462A18347AB /* Packages */,
+				18AD565E496062BC130AE4C9 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		FD6C1253C4A6D0ABEE99F9FA /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				A4AEEC1E644556B48B58A9BB /* FirebaseGameService.swift */,
+				166C5BD7C67EE31AC54AD93C /* GameService.swift */,
+				144CA78F49F180F94B608455 /* LocalGameService.swift */,
+				3CFE7741BEEEACB1D43A24D5 /* LocationService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		90B8CE3FCC39FAE9D4B15BF6 /* OniGame */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FA37453A499E00B2FD556093 /* Build configuration list for PBXNativeTarget "OniGame" */;
+			buildPhases = (
+				90DF0975E51A9C73F4333D8F /* Sources */,
+				CC54444BF6AFCEF97E83ABEA /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = OniGame;
+			packageProductDependencies = (
+				CAC7CEC48698B9B7A638AE21 /* OniGameCore */,
+				4871868EB63FCA2EDDFED214 /* FirebaseAuth */,
+				B2DEC039C89D3F34E72B6655 /* FirebaseDatabase */,
+				A5FC1087BE46588306B63851 /* FirebaseFunctions */,
+			);
+			productName = OniGame;
+			productReference = 8E91F3DC739E49E7BD78B5F7 /* OniGame.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F903A7961DDDE3409342E0F3 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2600;
+			};
+			buildConfigurationList = 16F0C061C6919F6FEED10A3B /* Build configuration list for PBXProject "OniGame" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = ja;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				ja,
+			);
+			mainGroup = CDA0931909459C612D4CDAC8;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				8ACAB655E38D41A61085988A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				068BBA60D61256EEA80A58F0 /* XCLocalSwiftPackageReference "OniGameCore" */,
+			);
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				90B8CE3FCC39FAE9D4B15BF6 /* OniGame */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		90DF0975E51A9C73F4333D8F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				349C2032536D464B22F2A9B3 /* AppConfig.swift in Sources */,
+				56A4CB4B8FE0ABA7BAEB0BEB /* AppModel.swift in Sources */,
+				5F07D4E7007EA0F79A36070E /* BoardMap.swift in Sources */,
+				E92328144CE7279B847C27F3 /* CreateView.swift in Sources */,
+				0146B86786719B3FD09DF86C /* FirebaseGameService.swift in Sources */,
+				2D1C99C074BF426E55F956B2 /* GameHUD.swift in Sources */,
+				D6E96DF6E754CC3BF1FF0743 /* GameScreenModel.swift in Sources */,
+				576296AF05392B45E3BA548C /* GameService.swift in Sources */,
+				E448FB4C9C7DC15E482EDBBB /* GameView.swift in Sources */,
+				03C8E09AF7C021583329C930 /* HomeView.swift in Sources */,
+				AF7119202259D783A6EF7245 /* LobbyView.swift in Sources */,
+				49B9B7C3F013D94213D199B7 /* LocalGameService.swift in Sources */,
+				B6F7BC90D80613AE14E95DE5 /* LocationService.swift in Sources */,
+				046258525CB4C591561739D0 /* MapLayers.swift in Sources */,
+				2AA7FA52EB696DC943352331 /* OniGameApp.swift in Sources */,
+				71D4A9D39778D4D52D3B6CC7 /* ResultScreen.swift in Sources */,
+				7A1C0109C062319D38D578C8 /* RootView.swift in Sources */,
+				D0C6C85E70D8F62CAEB65DAE /* ToastCenter.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		74277D224B3553DE603D9C97 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		92EA8E85BEB4B854EFFC9564 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		ADD52F0ED3A7A905117A8F12 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = OniGame/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.onigame;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		D02B1E433F35E64D4AD88C42 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = OniGame/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.onigame;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		16F0C061C6919F6FEED10A3B /* Build configuration list for PBXProject "OniGame" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				92EA8E85BEB4B854EFFC9564 /* Debug */,
+				74277D224B3553DE603D9C97 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FA37453A499E00B2FD556093 /* Build configuration list for PBXNativeTarget "OniGame" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ADD52F0ED3A7A905117A8F12 /* Debug */,
+				D02B1E433F35E64D4AD88C42 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		068BBA60D61256EEA80A58F0 /* XCLocalSwiftPackageReference "OniGameCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = OniGameCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		8ACAB655E38D41A61085988A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		4871868EB63FCA2EDDFED214 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8ACAB655E38D41A61085988A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		A5FC1087BE46588306B63851 /* FirebaseFunctions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8ACAB655E38D41A61085988A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFunctions;
+		};
+		B2DEC039C89D3F34E72B6655 /* FirebaseDatabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8ACAB655E38D41A61085988A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseDatabase;
+		};
+		CAC7CEC48698B9B7A638AE21 /* OniGameCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = OniGameCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = F903A7961DDDE3409342E0F3 /* Project object */;
+}

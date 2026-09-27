@@ -1,15 +1,14 @@
 # Xcode プロジェクトの設計図（XcodeGen 用）
 #
-#   brew install xcodegen
-#   cd ios && xcodegen generate     # → OniGame.xcodeproj ができる（Git 管理外）
-#
-# .xcodeproj を手で書くと壊れやすく差分も読みにくいので、この YAML から作る。
+# OniGame.xcodeproj はこの YAML から作ったものをリポジトリに入れてあるので、ふだんは git pull だけでよい。
+# ファイルの追加・設定の変更は、この YAML を直してから xcodegen generate で作り直し、.xcodeproj ごとコミットする。
 name: OniGame
 options:
   bundleIdPrefix: com.example
   deploymentTarget:
     iOS: "17.0"
   developmentLanguage: ja
+  xcodeVersion: "26.0" # 「Update to recommended settings」の案内を出さないため
 
 packages:
   Firebase:

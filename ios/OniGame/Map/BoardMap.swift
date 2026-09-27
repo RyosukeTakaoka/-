@@ -62,10 +62,10 @@ struct BoardMap: View {
                     Annotation(pin.label, coordinate: pin.position.coordinate, anchor: .bottom) {
                         PinView(pin: pin)
                     }
+                    .annotationTitles(.hidden) // 名前は PinView の中に表示する
                 }
             }
             .mapStyle(.standard(pointsOfInterest: .excludingAll))
-            .annotationTitles(.hidden)
             .onTapGesture { point in
                 guard let onTap, let c = proxy.convert(point, from: .local) else { return }
                 onTap(LatLng(lat: c.latitude, lng: c.longitude))

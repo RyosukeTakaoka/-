@@ -8,3 +8,10 @@ functions/shared/
 .firebase/
 *-debug.log
 .runtimeconfig.json
+# Swift / Xcode
+ios/**/.build/
+ios/**/.swiftpm/
+ios/*.xcodeproj/
+ios/**/xcuserdata/
+ios/OniGame/GoogleService-Info.plist
+ios/OniGame/Info.plist

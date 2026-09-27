@@ -419,3 +419,36 @@ tests/rules/  tests/functions/
    - 確認できたのは、この場合に端末内モードへ切り替わり、その旨が通知されること
 
 通常の開発マシンでは `npm run test:emulator`（Auth・RTDB・Functions を起動）と `npm run emulators` ＋ ブラウザで確認できる。7-C に進む前に、手元での実行をお願いしたい。
+
+## 14. 7-C〜7-H で実装したこと（iOS 版のサーバーとして）
+
+クライアントは iOS アプリ（SwiftUI・`ios/`）。サーバーの設計はこの文書の方針どおりで、次の点を決めて実装した。
+
+### 状態の持ち方
+
+- サーバー専用の状態は `/private/games/{roomId}/state` に **JSON 文字列**で1つにまとめる（RTDB は null・空配列を保存できず、`gameEngine` の状態の形が崩れるため）
+- 変更はすべて `functions/src/store.js` の `mutateGame()`（RTDB トランザクション → `gameEngine` → 書き戻し）を通す。同時に2人が確保しても1件ずつ処理される
+- 変更後に `buildChannels(state)` と前の状態を比べ、変わった部分だけを書き出す（fanout）
+  - `rooms/{r}/public/doc`・`channels/*`・`views/{uid}`・`results/*` は JSON 文字列
+  - `rooms/{r}/access`（`phase`・`showHunters`・`players/{uid}/{role,status}`）は Security Rules の判定用に通常のデータで書く
+  - 6章の `public/players/{uid}` の代わりに `access` を使う（表示用の public とルール用の access を分けた）
+- 部屋を作った時点（ロビー）から状態をサーバーが持つ。メンバーの出入りは `syncPlayers` で players に反映する（ゲーム中は変えない）
+
+### 関数（`functions/src/game.js`・`rooms.js`）
+
+- 呼び出し型: `configureGame`（設定・開始地点・除外エリア → ロビー。もう一度遊ぶときに使う）・`startGame`・`requestCapture`（15秒より古い位置は判定に使わない）・`claimArrival`・`changeDestination`・`abortGame`・`prepareRematch`
+- DB トリガー `onLocationWritten`: 形式・ゲーム中・参加中・秒速12m以下を確認して `advance` → `updatePosition`。RTDB トリガーは DB インスタンスと同じ場所で動かす必要があるので、場所はパラメーター `DATABASE_REGION`（既定 `asia-southeast1`）
+- タスクキュー `advanceGame`: `nextDueAt` の時刻に1件だけ予約（`private/games/{r}/scheduledAt`）。古い gameId の予約は無視。動いたら必ず次を予約する
+- 定期実行 `sweepRooms`（10分ごと）: 予約が60秒以上止まっているゲームを進める・ゲーム中でない部屋の `/locations` を消す・作成から1日たった部屋を消す
+
+### Security Rules（`database.rules.json`）
+
+- `/locations/{r}/{uid}`: 本人・メンバー・`access.phase === 'playing'`・`access.players[uid].status === 'active'`・前回から2秒以上・`t === now`・lat/lng の範囲・余計な項目なし。読み取りは誰も不可
+- `channels/hunterPositions`: ゲーム中で「参加中の鬼」または `showHunters`。`runnerPositions`: ゲーム中の参加中の逃走者。`possibleAreas`: ゲーム中の参加中の鬼
+
+### テスト（`tests-emulator/`）
+
+- `game.test.js`: ゲーム全体（作成 → 開始 → 位置 → 公開範囲 → 確保 → 時間切れまで予約で進む → 結果 → もう一度遊ぶ）、ミッション（目的地は本人だけ・遠い申告は失敗・目的地の変更は1回・blurM の変化）、掃除係
+- `gameRules.test.js`: 7-H の攻撃テスト（実位置の読み取り・他人/脱落者/ゲーム外の位置の書き込み・時刻の偽装・連続書き込み・役割ごとのチャンネル・結果や役割の書き換え）
+
+この開発環境では Firebase CLI がローカルのエミュレーターにも外部プロキシ経由で接続してしまうため、RTDB エミュレーターの jar を直接起動し、`FIREBASE_DATABASE_EMULATOR_HOST=127.0.0.1:9000 node --test tests-emulator/*.test.js` で実行した（44件すべて成功）。Functions エミュレーター経由の呼び出し（`onCall` の HTTP の経路・Cloud Tasks の予約）は手元の Mac で `npm run test:emulator`・`npm run emulators` ＋ iOS アプリで確認すること。

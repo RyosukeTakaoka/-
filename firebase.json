@@ -7,15 +7,37 @@
       "source": "functions",
       "codebase": "default",
       "runtime": "nodejs22",
-      "ignore": ["node_modules", ".git", "*.local", "test"],
-      "predeploy": ["npm --prefix \"$RESOURCE_DIR\" run build"]
+      "ignore": [
+        "node_modules",
+        ".git",
+        "*.local",
+        "test"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run build"
+      ]
     }
   ],
   "emulators": {
     "singleProjectMode": true,
-    "auth": { "host": "127.0.0.1", "port": 9099 },
-    "database": { "host": "127.0.0.1", "port": 9000 },
-    "functions": { "host": "127.0.0.1", "port": 5001 },
-    "ui": { "enabled": false }
+    "auth": {
+      "host": "127.0.0.1",
+      "port": 9099
+    },
+    "database": {
+      "host": "127.0.0.1",
+      "port": 9000
+    },
+    "functions": {
+      "host": "127.0.0.1",
+      "port": 5001
+    },
+    "ui": {
+      "enabled": false
+    },
+    "tasks": {
+      "host": "127.0.0.1",
+      "port": 9499
+    }
   }
 }

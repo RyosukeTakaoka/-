@@ -11,9 +11,21 @@
       ".read": false,
       ".write": false
     },
+
     "locations": {
       ".read": false,
-      ".write": false
+      "$roomId": {
+        "$uid": {
+          ".read": false,
+          ".write": "auth != null && auth.uid === $uid && newData.exists() && root.child('rooms').child($roomId).child('members').child(auth.uid).exists() && root.child('rooms').child($roomId).child('access').child('phase').val() === 'playing' && root.child('rooms').child($roomId).child('access').child('players').child(auth.uid).child('status').val() === 'active' && (!data.exists() || now - data.child('t').val() >= 2000)",
+          ".validate": "newData.hasChildren(['lat', 'lng', 't'])",
+          "lat": { ".validate": "newData.isNumber() && newData.val() >= -90 && newData.val() <= 90" },
+          "lng": { ".validate": "newData.isNumber() && newData.val() >= -180 && newData.val() <= 180" },
+          "acc": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000" },
+          "t": { ".validate": "newData.isNumber() && newData.val() === now" },
+          "$other": { ".validate": false }
+        }
+      }
     },
 
     "rooms": {
@@ -40,8 +52,22 @@
             "$other": { ".validate": false }
           }
         },
+        "access": {
+          ".read": "auth != null && root.child('rooms').child($roomId).child('members').child(auth.uid).exists()"
+        },
         "public": {
           ".read": "auth != null && root.child('rooms').child($roomId).child('members').child(auth.uid).exists()"
+        },
+        "channels": {
+          "hunterPositions": {
+            ".read": "auth != null && root.child('rooms').child($roomId).child('members').child(auth.uid).exists() && root.child('rooms').child($roomId).child('access').child('phase').val() === 'playing' && ((root.child('rooms').child($roomId).child('access').child('players').child(auth.uid).child('role').val() === 'hunter' && root.child('rooms').child($roomId).child('access').child('players').child(auth.uid).child('status').val() === 'active') || root.child('rooms').child($roomId).child('access').child('showHunters').val() === true)"
+          },
+          "runnerPositions": {
+            ".read": "auth != null && root.child('rooms').child($roomId).child('members').child(auth.uid).exists() && root.child('rooms').child($roomId).child('access').child('phase').val() === 'playing' && root.child('rooms').child($roomId).child('access').child('players').child(auth.uid).child('role').val() === 'runner' && root.child('rooms').child($roomId).child('access').child('players').child(auth.uid).child('status').val() === 'active'"
+          },
+          "possibleAreas": {
+            ".read": "auth != null && root.child('rooms').child($roomId).child('members').child(auth.uid).exists() && root.child('rooms').child($roomId).child('access').child('phase').val() === 'playing' && root.child('rooms').child($roomId).child('access').child('players').child(auth.uid).child('role').val() === 'hunter' && root.child('rooms').child($roomId).child('access').child('players').child(auth.uid).child('status').val() === 'active'"
+          }
         },
         "views": {
           "$uid": {

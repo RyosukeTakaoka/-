@@ -1,4 +1,6 @@
-# 👹 リアル鬼ごっこ（oni-game）
+# 👹 リアル鬼ごっこ（oni-game・Web 版）
+
+> iOS 版（SwiftUI ＋ Firebase）は [`../ios/`](../ios/README.md) にあります。ゲームのルール（このフォルダの `js/game`）は iOS 版のサーバーと共有しています。
 
 友達同士で、学校・公園・街などのリアルな空間を使って遊ぶ鬼ごっこアプリです。
 地図（Google Maps）をゲームボードにして、開始地点を中心とした円形エリアで遊びます。
@@ -16,7 +18,7 @@
 | 4 | ミッションシステム | ✅ 完了 |
 | 5 | ミッション結果による精度変更 | ✅ 完了 |
 | 6 | ゲーム終了・結果画面 | ✅ 完了 |
-| 7 | Firebase連携 | 7-A 設計・7-A2 準備・**7-B 部屋の作成/参加/メンバー/在席** 完了。7-C 以降（ゲーム進行のサーバー化）は未着手。設計は [docs/step7-firebase-design.md](docs/step7-firebase-design.md) |
+| 7 | Firebase連携 | サーバー（7-A〜7-H）は完了。Web 版のクライアントは部屋の作成/参加/メンバー/在席まで対応（ゲーム進行は iOS 版で対応）。設計は [docs/step7-firebase-design.md](docs/step7-firebase-design.md) |
 | 8 | 実機テスト・改善 | 未着手 |
 
 ## 動かし方

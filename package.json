@@ -2,14 +2,15 @@
   "name": "oni-game",
   "private": true,
   "type": "module",
-  "description": "リアル鬼ごっこ（鬼ごっこ＋ミッション＋情報戦）スマホ向けWebアプリ",
+  "description": "リアル鬼ごっこ（鬼ごっこ＋ミッション＋情報戦）。iOS（SwiftUI）アプリ・Firebase サーバー・Web 版",
   "scripts": {
     "start": "python3 -m http.server 8000 --directory oni-game",
     "test": "node --test \"tests/**/*.test.js\"",
     "functions:install": "npm --prefix functions install",
     "functions:build": "npm --prefix functions run build",
-    "test:emulator": "npm run functions:build && firebase emulators:exec --only auth,database,functions --project demo-oni-game \"node --test --test-concurrency=1 tests-emulator/*.test.js\"",
-    "emulators": "npm run functions:build && firebase emulators:start --only auth,database,functions --project demo-oni-game"
+    "test:emulator": "npm run functions:build && firebase emulators:exec --only auth,database,functions,tasks --project demo-oni-game \"node --test --test-concurrency=1 tests-emulator/*.test.js\"",
+    "emulators": "npm run functions:build && firebase emulators:start --only auth,database,functions,tasks --project demo-oni-game",
+    "ios:golden": "node ios/OniGameCore/scripts/make-golden.mjs"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.2",

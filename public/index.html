@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#b91c1c" />
+  <title>リアル鬼ごっこ</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- ホーム画面 -->
+  <section id="screen-home" class="screen active">
+    <div class="card">
+      <h1>👹 リアル鬼ごっこ</h1>
+      <p class="sub">スマホのGPSで遊ぶ、本物の鬼ごっこ</p>
+      <label>なまえ
+        <input id="name" maxlength="16" autocomplete="nickname" placeholder="例: たろう" />
+      </label>
+      <button id="btn-create" class="primary">部屋をつくる</button>
+      <div class="divider">または</div>
+      <label>部屋コード
+        <input id="join-code" inputmode="numeric" maxlength="4" placeholder="4桁の数字" />
+      </label>
+      <button id="btn-join">部屋に参加する</button>
+      <details class="howto">
+        <summary>あそびかた</summary>
+        <ol>
+          <li>ホストが部屋をつくり、4桁のコードをみんなに伝える</li>
+          <li>ゲーム開始でランダムに鬼が決まる。エリアはホストの現在地が中心</li>
+          <li>鬼には一定時間ごとに逃走者の位置が公開される</li>
+          <li>鬼は近くの逃走者を「確保」ボタンで捕まえる（タッチされた逃走者は自分で報告してもOK）</li>
+          <li>制限時間まで1人でも逃げ切れば逃走者の勝ち、全員確保で鬼の勝ち</li>
+        </ol>
+        <p class="warn">⚠ 道路への飛び出しや私有地への立ち入りに注意して遊んでください。</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- ロビー画面 -->
+  <section id="screen-lobby" class="screen">
+    <div class="card">
+      <div class="room-code">部屋コード <strong id="lobby-code">----</strong></div>
+      <button id="btn-share" class="small">コードを共有</button>
+      <h2>参加者 <span id="lobby-count"></span></h2>
+      <ul id="lobby-players" class="player-list"></ul>
+
+      <h2>ルール</h2>
+      <form id="settings" class="settings">
+        <label>制限時間（分）<input type="number" name="durationMin" min="1" max="180" /></label>
+        <label>鬼の人数<input type="number" name="hunterCount" min="1" max="20" /></label>
+        <label>確保できる距離（m）<input type="number" name="catchRadiusM" min="3" max="100" /></label>
+        <label>位置公開の間隔（秒）<input type="number" name="revealIntervalSec" min="10" max="600" /></label>
+        <label>エリア半径（m）<input type="number" name="areaRadiusM" min="50" max="5000" /></label>
+        <label>モード
+          <select name="mode">
+            <option value="classic">通常（捕まったら牢屋）</option>
+            <option value="zombie">増え鬼（捕まったら鬼になる）</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" name="showHuntersToRunners" /> 逃走者に鬼の位置を見せる</label>
+      </form>
+      <p id="gps-status" class="gps">📡 位置情報を取得中…</p>
+      <button id="btn-start" class="primary">ゲーム開始</button>
+      <p id="wait-host" class="sub">ホストの開始を待っています…</p>
+      <button id="btn-leave" class="link">部屋を出る</button>
+    </div>
+  </section>
+
+  <!-- ゲーム画面 -->
+  <section id="screen-game" class="screen">
+    <div id="map"></div>
+    <header class="hud">
+      <div id="role-badge" class="badge">-</div>
+      <div class="timer" id="timer">--:--</div>
+      <div class="stats">
+        <span id="alive">残り -/-</span>
+        <span id="reveal">公開まで --</span>
+      </div>
+    </header>
+    <div id="area-warning" class="area-warning hidden">⚠ エリア外です！戻ってください</div>
+    <footer class="actions">
+      <button id="btn-catch" class="primary big hidden">🫳 確保！</button>
+      <button id="btn-surrender" class="danger hidden">捕まった…（報告）</button>
+      <button id="btn-center" class="small">📍 現在地</button>
+      <button id="btn-log" class="small">📜 ログ</button>
+    </footer>
+    <div id="log-panel" class="log-panel hidden"><ul id="log"></ul></div>
+  </section>
+
+  <!-- 結果画面 -->
+  <section id="screen-result" class="screen">
+    <div class="card">
+      <h1 id="result-title">結果</h1>
+      <p id="result-sub" class="sub"></p>
+      <ul id="result-players" class="player-list"></ul>
+      <button id="btn-again" class="primary">もう一度（ロビーへ）</button>
+      <p id="wait-host-again" class="sub">ホストがロビーに戻すのを待っています…</p>
+      <button id="btn-view-map">地図を見る</button>
+      <button id="btn-leave2" class="link">部屋を出る</button>
+    </div>
+  </section>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

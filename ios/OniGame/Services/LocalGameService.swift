@@ -57,7 +57,7 @@ final class LocalGameService: GameService {
     }
 
     func joinRoom(code: String, name: String) async throws {
-        throw GameError.precondition("ルームへの参加はオンラインモード（Firebase）で使えます。端末内モードでは使えません")
+        throw GameError.precondition("ルームへの参加はオンラインモード（Supabase）で使えます。端末内モードでは使えません")
     }
 
     func addDummyPlayer() throws {

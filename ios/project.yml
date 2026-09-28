@@ -4,24 +4,21 @@
 # ファイルの追加・設定の変更は、この YAML を直してから xcodegen generate で作り直し、.xcodeproj ごとコミットする。
 name: OniGame
 options:
-  bundleIdPrefix: com.example
   deploymentTarget:
     iOS: "17.0"
   developmentLanguage: ja
   xcodeVersion: "26.0" # 「Update to recommended settings」の案内を出さないため
 
 packages:
-  Firebase:
-    url: https://github.com/firebase/firebase-ios-sdk
-    from: "12.0.0"
+  Supabase:
+    url: https://github.com/supabase/supabase-swift
+    from: "2.0.0"
   OniGameCore:
     path: OniGameCore
 
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "1.0.0"
-    CURRENT_PROJECT_VERSION: "1"
 
 targets:
   OniGame:
@@ -29,24 +26,30 @@ targets:
     platform: iOS
     sources:
       - path: OniGame
+    # Team と Bundle Identifier は Config/Signing.xcconfig（共有の既定値）と
+    # Config/Local.xcconfig（自分用・Git 管理外）で決める。ここ（target の settings）には書かない
+    # （ここに書くと xcconfig より優先され、自分用の設定が効かなくなるため）
+    configFiles:
+      Debug: Config/Signing.xcconfig
+      Release: Config/Signing.xcconfig
     dependencies:
       - package: OniGameCore
-      - package: Firebase
-        product: FirebaseAuth
-      - package: Firebase
-        product: FirebaseDatabase
-      - package: Firebase
-        product: FirebaseFunctions
+      - package: Supabase
+        product: Supabase
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.example.onigame # 自分のものに変える（Firebase コンソールの iOS アプリと同じにする）
         TARGETED_DEVICE_FAMILY: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon # Assets.xcassets/AppIcon（1024×1024 の1枚から各サイズを自動で作る）
         GENERATE_INFOPLIST_FILE: NO
     info:
       path: OniGame/Info.plist
       properties:
         CFBundleDisplayName: リアル鬼ごっこ
         CFBundleDevelopmentRegion: ja
+        CFBundleIconName: AppIcon
+        # バージョンとビルド番号は Info.plist に直接書かず、ビルド設定（Config/*.xcconfig）から入れる
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         # 位置情報の利用目的（許可ダイアログに表示される）
@@ -55,16 +58,18 @@ targets:
         UIBackgroundModes: [location]
         # 招待リンク onigame://join?code=1234
         CFBundleURLTypes:
-          - CFBundleURLName: com.example.onigame.invite
+          - CFBundleURLName: onigame.invite
             CFBundleURLSchemes: [onigame]
-        # Firebase Emulator（http://Mac の IP:ポート）に接続するため。本番は https なので影響しない
+        # ローカルの Supabase（http://Mac の IP:54321）に接続するため。本番は https なので影響しない
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
         # ---- アプリの設定（App/AppConfig.swift）----
-        OniBackend: firebase          # firebase（オンライン）/ local（端末内モード＝開発用）
-        OniFirebaseMode: emulator     # emulator（Mac のエミュレーター）/ production（本番。GoogleService-Info.plist が必要）
+        OniBackend: online            # online（オンライン・Supabase）/ local（端末内モード＝開発用）
+        OniSupabaseMode: emulator     # emulator（Mac の supabase start）/ production（本番）
         OniEmulatorHost: 127.0.0.1    # 実機で試すときは Mac の IP アドレス（例: 192.168.0.10）
-        OniFunctionsRegion: asia-northeast1
+        # 本番用（production のときだけ使う）。Supabase の Project Settings → API の値
+        # OniSupabaseUrl: https://xxxxxxxxxxxx.supabase.co
+        # OniSupabaseAnonKey: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 schemes:
   OniGame:

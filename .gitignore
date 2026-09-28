@@ -14,3 +14,7 @@ ios/**/.swiftpm/
 ios/*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
 ios/**/xcuserdata/
 ios/OniGame/GoogleService-Info.plist
+ios/Config/Local.xcconfig
+# Supabase Edge Functions（oni-game/js からコピーする。npm run supabase:build で作る）
+supabase/functions/_shared/game/
+supabase/functions/_shared/utils/

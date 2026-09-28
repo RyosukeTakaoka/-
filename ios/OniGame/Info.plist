@@ -8,6 +8,8 @@
 	<string>リアル鬼ごっこ</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -17,12 +19,12 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.example.onigame.invite</string>
+			<string>onigame.invite</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>onigame</string>
@@ -30,7 +32,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>
@@ -39,13 +41,11 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>ゲーム中に、あなたの位置をゲームの判定（確保・ミッション）に使います。鬼には正確な位置ではなく、ぼかした円だけが見えます。</string>
 	<key>OniBackend</key>
-	<string>firebase</string>
+	<string>online</string>
 	<key>OniEmulatorHost</key>
 	<string>127.0.0.1</string>
-	<key>OniFirebaseMode</key>
+	<key>OniSupabaseMode</key>
 	<string>emulator</string>
-	<key>OniFunctionsRegion</key>
-	<string>asia-northeast1</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>

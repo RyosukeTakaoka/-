@@ -1,11 +1,11 @@
 // 画面とゲームの間の窓口（oni-game/js/services/gameService.js と同じ考え方）
 //
-// 画面はゲームの状態や Firebase を直接触らず、ここだけを使う。
+// 画面はゲームの状態や Supabase を直接触らず、ここだけを使う。
 //   - 読み取り: session（ロビー情報）/ view(...)（その人に見せてよいビュー）/ resultView(...)
 //   - 操作: すべて「要求」。最終的な判定は実装側（端末内なら GameEngine、オンラインならサーバー）が行う
 // 実装は2つ:
 //   - LocalGameService    … 端末内モード（開発モード）。この端末で GameEngine を動かし、ダミーの友達で確認する
-//   - FirebaseGameService … オンライン対戦。判定はすべて Cloud Functions。端末は読めるデータだけを受け取る
+//   - SupabaseGameService … オンライン対戦。判定はすべて Edge Functions。端末は読めるデータだけを受け取る
 
 import Foundation
 import OniGameCore

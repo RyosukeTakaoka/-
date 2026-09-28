@@ -1,0 +1,17 @@
+// 自分専用の署名設定（このファイルをコピーして Local.xcconfig という名前にする）
+//
+//   cp ios/Config/Local.xcconfig.example ios/Config/Local.xcconfig
+//
+// Local.xcconfig は .gitignore 済みなので、git pull や xcodegen generate をしても消えない・変わらない。
+
+// Team ID（10文字の英数字）。調べ方: Xcode → Settings → Accounts → 自分の Apple ID → チームを選ぶ、
+// または https://developer.apple.com/account の「メンバーシップの詳細」
+DEVELOPMENT_TEAM = ABCDE12345
+
+// Bundle Identifier を変えたいときだけ書く（既定値は Signing.xcconfig の com.takaoka.app.onigame）
+// 本番の Firebase を使うときは、Firebase コンソールに登録した iOS アプリの Bundle ID と同じにする
+// PRODUCT_BUNDLE_IDENTIFIER = com.takaoka.app.onigame
+
+// バージョンとビルド番号を変えたいときだけ書く（App Store Connect にアップロードするたびにビルド番号を増やす）
+// MARKETING_VERSION = 1.0.0
+// CURRENT_PROJECT_VERSION = 2

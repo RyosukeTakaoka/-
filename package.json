@@ -10,11 +10,17 @@
     "functions:build": "npm --prefix functions run build",
     "test:emulator": "npm run functions:build && firebase emulators:exec --only auth,database,functions,tasks --project demo-oni-game \"node --test --test-concurrency=1 tests-emulator/*.test.js\"",
     "emulators": "npm run functions:build && firebase emulators:start --only auth,database,functions,tasks --project demo-oni-game",
-    "ios:golden": "node ios/OniGameCore/scripts/make-golden.mjs"
+    "ios:golden": "node ios/OniGameCore/scripts/make-golden.mjs",
+    "supabase:build": "node supabase/functions/scripts/sync-shared.mjs",
+    "supabase:start": "npm run supabase:build && npx supabase start",
+    "supabase:functions": "npm run supabase:build && npx supabase functions serve",
+    "supabase:test": "npm run supabase:build && npx supabase db reset --local && npx deno test --allow-net --allow-env --allow-read --config supabase/functions/deno.json supabase/functions/_shared/tests/"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.2",
     "firebase": "^12.19.0",
-    "firebase-tools": "^15.31.0"
+    "firebase-tools": "^15.31.0",
+    "supabase": "^2.118.0",
+    "deno": "^2.9.6"
   }
 }

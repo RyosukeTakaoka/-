@@ -1,46 +1,50 @@
-# 👹 リアル鬼ごっこ（iOS 版・SwiftUI ＋ Firebase）
+# 👹 リアル鬼ごっこ（iOS 版・SwiftUI ＋ Supabase）
 
 Web 版（[`oni-game/`](../oni-game/)）と**同じ仕様**のゲームを、iPhone アプリ（SwiftUI）として作り直したものです。
-サーバーは CloudKit ではなく **Firebase**（Realtime Database ＋ Cloud Functions）を使います。
+サーバーは CloudKit ではなく **Supabase**（Postgres ＋ Edge Functions）を使います。
 
 - 鬼には逃走者の正確な位置は見えず、「この円の中のどこかにいる」という**可能性エリア**だけが見えます
 - ゲーム中に**ミッションが4回**発生し、成功すると位置がぼやけ、失敗すると絞り込まれます
 - 確保・ミッションの成功/失敗・勝敗などの**判定はすべてサーバー**で行い、iPhone は「要求」と「表示」だけをします
 
+> なぜ Firebase ではなく Supabase？ Cloud Functions は Firebase の無料（Spark）プランでは動かせず、
+> Blaze（従量課金）プランへの変更＝カード登録が必須になります。Supabase なら無料プランのまま
+> オンライン対戦のサーバーを動かせます。判定のルール自体（`oni-game/js/game`）は変えていません。
+
 ## 全体の構成
 
 ```
-iPhone（SwiftUI アプリ）                         Firebase
-┌────────────────────────┐   要求（呼び出し型関数）   ┌───────────────────────────────┐
-│ 画面（Views/）          │ ───────────────────────▶ │ Cloud Functions（functions/）   │
-│ GameService            │   createRoom・startGame・ │  ゲームのルール（JS 版と同じ）   │
-│  ├ FirebaseGameService │   requestCapture など     │  判定・可能性エリア・ミッション  │
-│  └ LocalGameService    │                          │         │ 書き出す               │
-│ OniGameCore（ルール）   │ ◀─────────────────────── │ Realtime Database               │
-└────────────────────────┘   読めるデータだけ購読     │  public・channels・views・結果   │
-        │ 自分の GPS                                  │  locations（実位置・誰も読めない）│
-        └───────────────▶ /locations/{部屋}/{自分} ──▶│  private（サーバー専用の状態）    │
-                                                     └───────────────────────────────┘
+iPhone（SwiftUI アプリ）                          Supabase
+┌────────────────────────┐   要求（呼び出し型 Function） ┌───────────────────────────────┐
+│ 画面（Views/）          │ ─────────────────────────▶ │ Edge Functions（supabase/functions/）│
+│ GameService            │   create-room・start-game・ │  ゲームのルール（JS 版と同じ）   │
+│  ├ SupabaseGameService │   request-capture など      │  判定・可能性エリア・ミッション  │
+│  └ LocalGameService    │                            │         │ 書き出す               │
+│ OniGameCore（ルール）   │ ◀───────────────────────── │ Postgres（Row Level Security）  │
+└────────────────────────┘   一定間隔で読み直す          │  public_doc・channels・views・結果│
+        │ 自分の GPS                                    │  locations（実位置・誰も読めない）│
+        └───────────────▶ report-location（呼び出し型）─▶│  game_state（サーバー専用の状態） │
+                                                       └───────────────────────────────┘
 ```
 
 | フォルダ | 中身 |
 | --- | --- |
-| `ios/OniGame/` | アプリ本体（SwiftUI の画面・地図・GPS・Firebase との通信） |
-| `ios/OniGameCore/` | ゲームのルール（Swift パッケージ）。画面にも Firebase にも依存しないので、Mac でも Linux でもテストできる |
+| `ios/OniGame/` | アプリ本体（SwiftUI の画面・地図・GPS・Supabase との通信） |
+| `ios/OniGameCore/` | ゲームのルール（Swift パッケージ）。画面にも Supabase にも依存しないので、Mac でも Linux でもテストできる |
 | `ios/OniGame.xcodeproj` | Xcode プロジェクト（`git pull` するだけで最新になる） |
 | `ios/project.yml` | Xcode プロジェクトの設計図（`.xcodeproj` はここから XcodeGen で作ってある） |
-| `functions/` | サーバー（Cloud Functions）。ルールは `oni-game/js/game` を共有して使う |
-| `database.rules.json` | Security Rules（誰が何を読み書きできるか） |
+| `supabase/functions/` | サーバー（Edge Functions）。ルールは `oni-game/js/game` を共有して使う |
+| `supabase/migrations/` | テーブル定義・Row Level Security（誰が何を読み書きできるか） |
 
 ### アプリのファイル
 
 | ファイル | 役割 |
 | --- | --- |
 | `App/OniGameApp.swift` | アプリの入口 |
-| `App/AppConfig.swift` | 設定（オンライン / 端末内モード、エミュレーター / 本番） |
+| `App/AppConfig.swift` | 設定（オンライン / 端末内モード、ローカル / 本番） |
 | `App/AppModel.swift` | アプリ全体の状態（どのサービスを使うか・通知・開発用の視点） |
 | `Services/GameService.swift` | 画面が使う唯一の窓口（インターフェース） |
-| `Services/FirebaseGameService.swift` | オンライン版。要求の送信と、読めるデータの購読・組み立て |
+| `Services/SupabaseGameService.swift` | オンライン版。要求の送信と、読めるデータの定期的な読み直し |
 | `Services/LocalGameService.swift` | 端末内モード（開発用）。ダミーの友達で1台で確認できる |
 | `Services/LocationService.swift` | GPS（CoreLocation） |
 | `Views/` | 画面（ホーム・作成・ロビー・ゲーム・結果） |
@@ -73,7 +77,7 @@ Swift 版で同じ操作をして、状態・ログ・結果・チャンネル�
 ## 必要なもの
 
 - Mac と **Xcode 16 以上**（iOS 17 以上の iPhone またはシミュレーター）
-- サーバーを手元で動かすとき: Node.js 22、Java 11 以上（Firebase Emulator 用）
+- サーバーを手元で動かすとき: Node.js 22、[Supabase CLI](https://supabase.com/docs/guides/cli)、Docker Desktop（ローカルの Supabase は Docker で動く）
 
 ## 動かし方
 
@@ -86,7 +90,7 @@ open ios/OniGame.xcodeproj
 
 `git pull` したとき Xcode を開いたままなら、Xcode が自動で読み込み直します。
 
-初回は Xcode が Firebase のライブラリ（Swift Package）をダウンロードします（数分かかります）。
+初回は Xcode が Supabase のライブラリ（Swift Package）をダウンロードします（数分かかります）。
 実機で動かす・App Store に出すときは、**Team を `ios/Config/Local.xcconfig` に書きます**（最初の1回だけ）。
 
 ```bash
@@ -109,80 +113,98 @@ cp ios/Config/Local.xcconfig.example ios/Config/Local.xcconfig
 3. ゲーム画面の「🛠 視点」で、どのプレイヤーとして見るかを切り替えられます（見える情報はそのプレイヤーのルールどおり）
 4. 地図をタップすると、今の視点のプレイヤーがその場所へ移動します（GPS の代わり）
 
-### 2-B. オンラインで試す（Firebase Emulator・本番には接続しない）
+### 2-B. オンラインで試す（ローカルの Supabase・本番には接続しない）
 
 ```bash
 # リポジトリのルートで
 npm install
-npm run functions:install
-npm run emulators        # Auth・RTDB・Functions・Tasks のエミュレーターを起動（projectId: demo-oni-game）
+npm run supabase:start   # Postgres・Auth・Edge Functions をローカルで起動（Docker が必要）
 ```
 
+初回はコンテナのダウンロードで数分かかります。起動すると `http://127.0.0.1:54321` で API が立ち上がります
+（`http://127.0.0.1:54323` の Studio 画面でテーブルの中身を見られます）。
+
 - **シミュレーター**: そのまま Xcode で実行します（`OniEmulatorHost` が `127.0.0.1`）
-- **実機**: iPhone と Mac を同じ Wi-Fi につなぎ、
-  1. `firebase.json` の各エミュレーターの `"host"` を `"0.0.0.0"` にする（ほかの機器から接続できるようにする）
-  2. `ios/OniGame/Info.plist` の `OniEmulatorHost` を Mac の IP アドレス（「システム設定 → Wi-Fi → 詳細」で確認）にする
+- **実機**: iPhone と Mac を同じ Wi-Fi につなぎ、`ios/OniGame/Info.plist` の `OniEmulatorHost` を
+  Mac の IP アドレス（「システム設定 → Wi-Fi → 詳細」で確認）にする
 - 2台（シミュレーター＋実機、または2つのシミュレーター）で起動すると、別々の匿名ユーザーとして同じ部屋で遊べます
 - 1人ではゲームを開始できません（鬼1人＋逃走者1人以上が必要）
+- 終わったら `npx supabase stop` で止められます
 
-### 3. 本番の Firebase を使うとき
+### 3. 本番の Supabase を使うとき
 
-1. [Firebase コンソール](https://console.firebase.google.com/) でプロジェクトを作り、**Blaze（従量課金）プラン**にする
-   （Cloud Functions・Cloud Tasks・Cloud Scheduler に必要。**必ず予算アラートを設定**してください）
-2. Authentication で「匿名」ログインを有効にする
-3. Realtime Database を作る（場所は `asia-southeast1`（シンガポール）を推奨。DB トリガーの関数は DB と同じ場所で動かす必要があるため。
-   ほかの場所にしたときは、デプロイ時に `DATABASE_REGION` パラメーターでその場所を指定する）
-4. サーバーをデプロイする
+1. [Supabase](https://supabase.com/) で無料アカウントを作り、新しいプロジェクトを作る（**カード登録は不要**）
+2. Authentication で「Anonymous Sign-Ins」を有効にする（Providers 画面）
+3. サーバーをデプロイする
    ```bash
-   npx firebase deploy --only database,functions --project <本番のプロジェクトID>
+   npx supabase login
+   npx supabase link --project-ref <プロジェクトの参照ID>   # Project Settings → General で確認
+   npm run supabase:build                                  # oni-game/js/game を Edge Functions 用にコピー
+   npx supabase db push                                    # テーブル・Row Level Security を反映
+   npx supabase functions deploy                            # Edge Functions をデプロイ
    ```
-5. コンソールで iOS アプリを追加し（バンドル ID は `project.yml` と同じ）、`GoogleService-Info.plist` をダウンロードして
-   `ios/OniGame/` に置く（**.gitignore 済み。GitHub に上げない**）
-6. `ios/OniGame/Info.plist` の `OniFirebaseMode` を `production` にする
+4. `supabase/production-setup.sql` の指示に沿って、SQL Editor で1回だけ SQL を実行する
+   （ゲームの時間経過を進める定期実行 `pg_cron` に、本番の URL と鍵を教える。実行しないとゲームは動くが、
+   誰も操作しないと時間経過だけが止まったままになる）
+5. `ios/project.yml` の `OniSupabaseUrl`（Project Settings → API → Project URL）・
+   `OniSupabaseAnonKey`（同 → anon public key。どちらも「公開してよい」値）のコメントを外して値を入れ、
+   `OniSupabaseMode` を `production` にして、`xcodegen generate`
 
-> 🔐 `GoogleService-Info.plist` の API キーは「秘密の鍵」ではありませんが、守りの前提にはしません。
-> 誰が何を読めるかは **Security Rules と Cloud Functions** で決めています（下の表）。
+> 🔐 anon key は「秘密の鍵」ではありませんが、守りの前提にはしません。
+> 誰が何を読めるかは **Row Level Security と Edge Functions** で決めています（下の表）。
+> 予算アラートは Supabase では必須ではありません（無料枠を超えると新規の書き込みが止まるだけで、
+> 意図せず高額請求になる設計にはなっていません）が、心配なら Billing 画面で使用量を確認してください。
 
-## サーバー（Firebase）の設計
+## サーバー（Supabase）の設計
 
-### データの置き場所（Realtime Database）
+### テーブル（Postgres）
 
-| パス | 中身 | 読める人 | 書ける人 |
+Firebase 版の Realtime Database のパス構成を、そのままテーブルに置き換えています。
+
+| テーブル | 中身 | 読める人 | 書ける人 |
 | --- | --- | --- | --- |
-| `/rooms/{部屋}/meta` | ホスト・参加コード・フェーズ | メンバー | サーバー |
-| `/rooms/{部屋}/members/{uid}` | 名前・参加時刻 | メンバー | サーバー（名前だけ本人） |
-| `/rooms/{部屋}/presence/{uid}` | オンラインか | メンバー | 本人 |
-| `/rooms/{部屋}/access` | 各人の役割・状態（ルールの判定用） | メンバー | サーバー |
-| `/rooms/{部屋}/public/doc` | 全員に見せてよいゲーム情報 | メンバー | サーバー |
-| `/rooms/{部屋}/channels/hunterPositions` | 鬼の位置 | 参加中の鬼（設定 ON なら全員） | サーバー |
-| `/rooms/{部屋}/channels/runnerPositions` | 逃走者の位置（仲間用） | 参加中の逃走者だけ | サーバー |
-| `/rooms/{部屋}/channels/possibleAreas` | 可能性エリア（ぼかした円） | 参加中の鬼だけ | サーバー |
-| `/rooms/{部屋}/views/{uid}` | 自分の円・目的地・クールダウン | 本人だけ | サーバー |
-| `/rooms/{部屋}/results/public`・`personal/{uid}` | 結果・自分のミッション結果 | メンバー・本人だけ | サーバー |
-| `/locations/{部屋}/{uid}` | **実位置**（GPS） | **誰も読めない** | 本人（ゲーム中・参加中・2秒以上あけて・時刻はサーバー時刻） |
-| `/private/games/{部屋}` | サーバー専用の状態（実位置・秘密値・ミッションの予定と目的地） | 誰も読めない | サーバー |
+| `rooms` | ホスト・参加コード・フェーズ | メンバー | サーバー |
+| `members` | 名前・参加時刻 | メンバー | サーバー（名前だけ `rename_self()` 経由で本人） |
+| `presence` | オンラインか（ハートビート） | メンバー | 本人 |
+| `access` | 各人の役割・状態（RLS の判定用） | メンバー | サーバー |
+| `public_doc` | 全員に見せてよいゲーム情報 | メンバー | サーバー |
+| `channels`（`hunterPositions`） | 鬼の位置 | 参加中の鬼（設定 ON なら全員） | サーバー |
+| `channels`（`runnerPositions`） | 逃走者の位置（仲間用） | 参加中の逃走者だけ | サーバー |
+| `channels`（`possibleAreas`） | 可能性エリア（ぼかした円） | 参加中の鬼だけ | サーバー |
+| `views` | 自分の円・目的地・クールダウン | 本人だけ | サーバー |
+| `results_public` / `results_personal` | 結果・自分のミッション結果 | メンバー・本人だけ | サーバー |
+| `locations` | **実位置**（GPS） | **誰も読めない** | サーバーだけ（`report-location` 経由） |
+| `game_state` | サーバー専用の状態（実位置・秘密値・ミッションの予定と目的地） | 誰も読めない | サーバー |
 
-ゲームの状態やビューは **JSON 文字列**で保存します（RTDB は null や空の配列を保存できず、形が崩れるため）。
-ルールの判定に使う `access` だけは、ルールから読めるように普通のデータにしています。
+ゲームの状態やビューは jsonb 列にそのまま保存します。誰が何を読めるかは Row Level Security（`supabase/migrations/*_rls.sql`）で決めています。
 
-### サーバーの関数（`functions/`）
+### サーバーの関数（`supabase/functions/`）
 
 | 関数 | 種類 | すること |
 | --- | --- | --- |
-| `createRoom` / `joinRoom` / `leaveRoom` | 呼び出し型 | 部屋の作成（4桁コード）・参加・退出（ホストが出ると解散） |
-| `configureGame` | 呼び出し型 | ホストが設定・開始地点・除外エリアを決めてロビーへ（もう一度遊ぶとき） |
-| `startGame` | 呼び出し型 | 役割・秘密値・ミッションの予定をサーバーで作って開始 |
-| `requestCapture` | 呼び出し型 | 「確保！」。対象はサーバーが実位置から選ぶ（15秒より古い位置は使わない） |
-| `claimArrival` | 呼び出し型 | 「目的地に着いた」の申告。サーバーの実位置で判定 |
-| `changeDestination` | 呼び出し型 | 目的地の変更（1ゲーム1回） |
-| `abortGame` / `prepareRematch` | 呼び出し型 | 途中終了・もう一度遊ぶ（ホストだけ） |
-| `onLocationWritten` | DB トリガー | GPS が届いたら検証（ゲーム中・参加中・秒速12m以下）して到達判定・公開 |
-| `advanceGame` | タスクキュー | 次に何かが起きる時刻（公開・ミッション開始/終了・時間切れ）に1件だけ予約して進める |
-| `sweepRooms` | 定期実行（10分ごと） | 止まったゲームの再予約・放置された部屋（1日）の削除 |
+| `create-room` / `join-room` / `leave-room` | 呼び出し型 | 部屋の作成（4桁コード）・参加・退出（ホストが出ると解散） |
+| `configure-game` | 呼び出し型 | ホストが設定・開始地点・除外エリアを決めてロビーへ（もう一度遊ぶとき） |
+| `start-game` | 呼び出し型 | 役割・秘密値・ミッションの予定をサーバーで作って開始 |
+| `request-capture` | 呼び出し型 | 「確保！」。対象はサーバーが実位置から選ぶ（15秒より古い位置は使わない） |
+| `claim-arrival` | 呼び出し型 | 「目的地に着いた」の申告。サーバーの実位置で判定 |
+| `change-destination` | 呼び出し型 | 目的地の変更（1ゲーム1回） |
+| `abort-game` / `prepare-rematch` | 呼び出し型 | 途中終了・もう一度遊ぶ（ホストだけ） |
+| `report-location` | 呼び出し型 | GPS の送信。検証（ゲーム中・参加中・秒速12m以下）して到達判定・公開 |
+| `advance-due-games` | 定期実行（`pg_cron`・1分ごと） | 次に何かが起きる時刻（公開・ミッション開始/終了・時間切れ）を過ぎたゲームを進める。掃除係も兼ねる |
 
+Cloud Tasks に相当するサービスが無いため、Firebase 版の「1ゲームに1件、正確な時刻に予約する」方式ではなく、
+1分ごとに全部屋をポーリングする方式にしています。正しさには影響しません。
 どの要求も、最初に「遅れている処理（時間切れ・ミッション）」を片付けてから判定するので、
-予約の実行が遅れても、時間切れ後の確保や終了後の到達は成立しません。
+ポーリングの間隔がずれても、時間切れ後の確保や終了後の到達は成立しません。
 ゲームが終わると、実位置・秘密値・可能性エリアはすぐに消えます。
+
+### リアルタイム表示について
+
+Firebase 版は RTDB の購読（`onValue`）で更新を即座に受け取っていましたが、iOS 版は
+**一定間隔（約1.2秒）で読み直す**方式にしています。ゲーム画面はもともと 0.25秒ごとに時計を更新する作りなので、
+その仕組みをそのまま流用しています。Supabase には Realtime（Postgres の変更を購読する仕組み）もありますが、
+まずは実装と検証がしやすいポーリング方式にしました。表示の即時性を上げたくなったら、
+`SupabaseGameService.swift` の `poll()` を Realtime の購読に置き換えられます。
 
 ## テスト
 
@@ -193,8 +215,8 @@ cd ios/OniGameCore && swift test
 # ゲームのルール（JS）
 npm test
 
-# サーバー（エミュレーター）: 部屋・ゲーム全体の流れ・ミッション・掃除係・Security Rules の攻撃テスト
-npm run test:emulator
+# サーバー（ローカルの Supabase）: 部屋・ゲーム全体の流れ・ミッション・Row Level Security のテスト
+npm run supabase:test
 ```
 
 JS 版のルール（`oni-game/js/game`）を変えたら、`npm run ios:golden` で一致テストの記録を作り直し、
@@ -204,12 +226,12 @@ Swift 版も同じように直して `swift test` が通ることを確認して
 
 | 項目 | Web 版 | iOS 版 |
 | --- | --- | --- |
+| サーバー | Firebase（部屋の作成・参加まで） | Supabase（ゲームの開始から結果・もう一度遊ぶまで全部） |
 | 地図 | Google Maps（APIキーが必要）/ 簡易マップ | MapKit（iOS 標準・APIキー不要） |
 | 開発モード | URL に `?dev` | ホーム画面の 🛠 メニューで「端末内モード」 |
 | 招待 | `?room=1234` のリンク | `onigame://join?code=1234` のリンク（共有シート） |
 | 通知 | 画面下のメッセージ＋バイブ | 画面下のメッセージ＋触覚フィードバック |
 | 画面を消したとき | 位置が送れなくなる | ゲーム中だけバックグラウンドでも位置を送る（画面上部に青い表示。終了で停止） |
-| オンライン対戦 | 部屋の作成・参加まで | ゲームの開始から結果・もう一度遊ぶまで全部 |
 
 ゲームのルール（可能性エリア・ミッション・ぼかし・確保・勝敗・結果）は同じです。
 

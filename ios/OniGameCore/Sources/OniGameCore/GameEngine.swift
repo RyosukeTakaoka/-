@@ -4,7 +4,7 @@
 // - 時刻は ctx.now で受け取る（Date() を内部で呼ばない）
 // - 乱数は ctx.rng で受け取る
 // 端末内モード（開発用）では LocalGameService がこれを呼ぶ。
-// オンライン（Firebase）では、同じルールの JS 版を Cloud Functions が呼ぶ（端末はこれを使わない）。
+// オンライン（Supabase）では、同じルールの JS 版を Edge Functions が呼ぶ（端末はこれを使わない）。
 
 import Foundation
 

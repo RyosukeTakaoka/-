@@ -102,9 +102,9 @@ struct HomeView: View {
     private var backendMenu: some View {
         Menu {
             Button {
-                app.switchBackend(.firebase)
+                app.switchBackend(.online)
             } label: {
-                Label("オンライン（Firebase）", systemImage: app.service.mode == .firebase ? "checkmark" : "network")
+                Label("オンライン（Supabase）", systemImage: app.service.mode == .online ? "checkmark" : "network")
             }
             Button {
                 app.switchBackend(.local)

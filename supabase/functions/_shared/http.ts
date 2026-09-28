@@ -29,7 +29,8 @@ export function serveCallable(handler: (now: number, uid: string, data: any) => 
 
       const data = req.method === 'GET' ? {} : await req.json().catch(() => ({}));
       const result = await handler(Date.now(), uid, data ?? {});
-      return json({ data: result });
+      return json(result); // Supabase の Edge Function は普通の HTTP ハンドラーなので、Firebase の
+      // onCall のような { data: ... } の包み紙は付けない（クライアントは結果をそのままデコードする）
     } catch (err) {
       const httpErr = err instanceof HttpError ? err : new HttpError(500, 'internal', (err as Error)?.message ?? '不明なエラー');
       return json({ error: { code: httpErr.code, message: httpErr.message } }, httpErr.status);

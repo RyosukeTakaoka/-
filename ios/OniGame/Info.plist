@@ -41,13 +41,11 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>ゲーム中に、あなたの位置をゲームの判定（確保・ミッション）に使います。鬼には正確な位置ではなく、ぼかした円だけが見えます。</string>
 	<key>OniBackend</key>
-	<string>firebase</string>
+	<string>online</string>
 	<key>OniEmulatorHost</key>
 	<string>127.0.0.1</string>
-	<key>OniFirebaseMode</key>
+	<key>OniSupabaseMode</key>
 	<string>emulator</string>
-	<key>OniFunctionsRegion</key>
-	<string>asia-northeast1</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>

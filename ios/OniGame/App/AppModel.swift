@@ -22,7 +22,7 @@ final class AppModel {
     private static func makeService(_ config: AppConfig) -> any GameService {
         switch config.backend {
         case .local: return LocalGameService()
-        case .firebase: return FirebaseGameService(config: config)
+        case .online: return SupabaseGameService(config: config)
         }
     }
 
@@ -36,7 +36,7 @@ final class AppModel {
         config.backend = backend
         service = AppModel.makeService(config)
         devViewerId = nil
-        toasts.show(backend == .local ? "端末内モード（開発用）に切り替えました" : "オンライン（Firebase）に切り替えました")
+        toasts.show(backend == .local ? "端末内モード（開発用）に切り替えました" : "オンライン（Supabase）に切り替えました")
     }
 
     func handle(url: URL) {

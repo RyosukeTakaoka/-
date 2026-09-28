@@ -78,10 +78,14 @@ final class SupabaseGameService: GameService {
     }
 
     /// ログイン済みならその uid、まだなら匿名ログインして uid を返す
+    ///
+    /// Swift の UUID.uuidString は大文字（例: 550E8400-...）だが、Postgres（Supabase）は
+    /// UUID を小文字（例: 550e8400-...）で返す。ここで小文字にそろえておかないと、
+    /// サーバーから読み直した host_uid などの文字列と一致しなくなる（isHost 判定などが常に false になる）
     private static func ensureSignedIn(_ client: SupabaseClient) async throws -> String {
-        if let user = client.auth.currentUser { return user.id.uuidString }
+        if let user = client.auth.currentUser { return user.id.uuidString.lowercased() }
         let session = try await client.auth.signInAnonymously()
-        return session.user.id.uuidString
+        return session.user.id.uuidString.lowercased()
     }
 
     private func requireUid() async throws -> String {
